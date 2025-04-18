@@ -13,81 +13,72 @@ class CharacterCSVParser:
         self.character_data = {"sessions": [], "magic_items": []}  # Ensure initialization
 
     def parse_csv(self):
-        """Parse CSV and extract character details, sessions, and magic items."""
+        """Parse CSV and extract session details and magic items."""
         with open(self.filename, mode="r", encoding="utf-8") as file:
             reader = csv.reader(file)
+            is_parsing_sessions = False  # Flag to start parsing sessions
 
             for row in reader:
                 if not row or len(row) < 2:  # Ignore empty or malformed rows
                     continue
 
-                if row[0] == "name" and len(row) >= 7:  # Adjusted index range
-                    self.character_data.update({
-                        "name": row[1],
-                        "race": row[2],
-                        "class": row[3],
-                        "background": row[4],  # Keeping background, but removing faction & lifestyle
-                        "portrait_url": row[5] if row[5] else None,
-                        "publicly_visible": row[6].lower() == "true",
-                        "sessions": [],
-                        "magic_items": []
-                    })
+                # Check if we reached the session data section
+                if row[0] == "type" and row[1] == "adventure_title":
+                    is_parsing_sessions = True
+                    continue  # Skip the header row
 
-                elif row[0] in ["CharacterLogEntry", "DmLogEntry"]:
-                    if "sessions" not in self.character_data:
-                        self.character_data["sessions"] = []  # Ensure sessions exists
+                if is_parsing_sessions:
+                    # Parse session data
+                    if row[0] in ["CharacterLogEntry", "DmLogEntry"]:
+                        self.character_data["sessions"].append({
+                            "type": row[0],
+                            "adventure_title": row[1],
+                            "session_number": row[2] if row[2] else None,
+                            "date_played": row[3] if row[3] else None,
+                            "session_length_hours": row[4] if row[4] else None,
+                            "player_level": row[5] if row[5] else None,
+                            "xp_gained": float(row[6]) if row[6] else None,
+                            "gp_gained": float(row[7]) if row[7] else None,
+                            "downtime_gained": float(row[8]) if row[8] else None,
+                            "renown_gained": float(row[9]) if row[9] else None,
+                            "location_played": row[11] if len(row) > 11 else None,
+                            "dm_name": row[12] if len(row) > 12 else None,
+                            "notes": row[14] if len(row) > 14 else None
+                        })
 
-                    self.character_data["sessions"].append({
-                        "type": row[0],
-                        "adventure_title": row[1],
-                        "session_number": row[2] if row[2] else None,
-                        "date_played": row[3] if row[3] else None,
-                        "session_length_hours": row[4] if row[4] else None,
-                        "player_level": row[5] if row[5] else None,
-                        "xp_gained": float(row[6]) if row[6] else None,
-                        "gp_gained": float(row[7]) if row[7] else None,
-                        "downtime_gained": float(row[8]) if row[8] else None,
-                        "renown_gained": float(row[9]) if row[9] else None,
-                        "location_played": row[11] if len(row) > 11 else None,
-                        "dm_name": row[12] if len(row) > 12 else None,
-                        "notes": row[14] if len(row) > 14 else None
-                    })
-
-                elif row[0] == "MAGIC ITEM" and len(row) >= 4:  # Ensure proper magic item structure
-                    magic_item = {
-                        "name": row[1],
-                        "rarity": row[2],
-                        "location_found": row[3]
-                    }
-                    if magic_item["name"].lower() != "name":  # Filter placeholder entry
-                        self.character_data["magic_items"].append(magic_item)
+                    # Parse magic item data
+                    elif row[0] == "MAGIC ITEM" and len(row) >= 4:
+                        magic_item = {
+                            "name": row[1],
+                            "rarity": row[2],
+                            "location_found": row[3]
+                        }
+                        if magic_item["name"].lower() != "name":  # Filter placeholder entry
+                            self.character_data["magic_items"].append(magic_item)
 
     def update_json(self):
         """Updates characters.json with new character data or modifies existing entry."""
-        if "name" not in self.character_data:
-            print("Error: Missing 'name' field in character data. Parsing may have failed.")
-            return  # Exit gracefully instead of crashing
-
         if os.path.exists(self.json_file):
             with open(self.json_file, "r", encoding="utf-8") as file:
                 try:
                     all_characters = json.load(file)
                 except json.JSONDecodeError:
-                    all_characters = []
-
+                    all_characters = {}
         else:
-            all_characters = []
+            all_characters = {}
+
+        # Ensure the character ID is included in the data
+        self.character_data["id"] = self.character_id
 
         if self.character_id in all_characters:
-            existing_character = all_characters[self.character_id]
-            print(f"Updating existing character: {self.character_data['name']}")
-            existing_character.update(self.character_data)
+            print(f"Updating existing character [id: {self.character_id}]")
+            all_characters[self.character_id].update(self.character_data)
         elif self.add_if_missing:
-            print(f"Adding new character: {self.character_data['name']}")
+            print(f"Adding new character [id: {self.character_id}]")
             all_characters[self.character_id] = self.character_data
-        else:   
-            print(f"Character ID {self.character_id} not found in JSON file. Use --add to add it. Aborting.")
-            return  # Exit gracefully instead of crashing
+        else:
+            print(f"Character with ID {self.character_id} does not exist in JSON file. Download the updated list, or use --add if you wish to force download of sessions.")
+            return  # Exit if not adding and character already exists   
 
         with open(self.json_file, "w", encoding="utf-8") as file:
             json.dump(all_characters, file, indent=4)
