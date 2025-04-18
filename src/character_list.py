@@ -1,17 +1,19 @@
 import json
 import argparse
 import requests
+import time
 from bs4 import BeautifulSoup
 from auth import AdventurersLeagueAuth
 
 class CharacterScraper:
-    def __init__(self, json_file="characters.json"):
+    def __init__(self, json_file="characters.json", delay=0.25):
         self.json_file = json_file
         self.auth = AdventurersLeagueAuth()
         self.auth.login()
         self.session = self.auth.get_session()
         self.user_id = self.auth.get_user_id()
         self.characters = {}  # Store characters with IDs as keys
+        self.delay = delay  # Delay between requests
 
     def get_max_page(self):
         """Fetches the user's character list and determines the highest page number."""
@@ -41,6 +43,7 @@ class CharacterScraper:
 
         for page_num in range(1, max_page + 1):
             character_list_url = f"https://www.adventurersleaguelog.com/users/{self.user_id}/characters?page={page_num}"
+            print(f"Fetching character list for page {page_num}...")
             response = self.session.get(character_list_url)
 
             if response.status_code != 200:
@@ -73,6 +76,10 @@ class CharacterScraper:
                         "tag": character_tag
                     }
 
+            # Delay between requests
+            print(f"Waiting for {self.delay} seconds before the next request...")
+            time.sleep(self.delay)
+
     def save_json(self, output_file=None):
         """Saves collected character data to JSON."""
         file_to_write = output_file or self.json_file
@@ -83,10 +90,11 @@ class CharacterScraper:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scrape all characters and save to JSON.")
     parser.add_argument("-j", "--jsonfile", type=str, help="Specify an alternate output file")
+    parser.add_argument("--delay", type=float, default=0.25, help="Delay (in seconds) between requests (default: 0.25)")
 
     args = parser.parse_args()
 
-    scraper = CharacterScraper()
+    scraper = CharacterScraper(json_file=args.jsonfile or "characters.json", delay=args.delay)
     scraper.scrape_character_data()
     scraper.save_json(args.jsonfile)
 
