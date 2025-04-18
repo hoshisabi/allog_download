@@ -1,12 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 import os
-import urllib3
 
 
 class AdventurersLeagueAuth:
     def __init__(self):
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session = requests.Session()
         self.email = os.getenv("ALLOG_EMAIL")
         self.password = os.getenv("ALLOG_PASSWORD")
@@ -17,7 +15,7 @@ class AdventurersLeagueAuth:
         if not self.email or not self.password:
             raise ValueError("ALLOG_EMAIL and ALLOG_PASSWORD must be set!")
 
-        login_page = self.session.get(self.login_url, verify=False)
+        login_page = self.session.get(self.login_url)
         soup = BeautifulSoup(login_page.text, "html.parser")
         auth_token = soup.find('input', {'name': 'authenticity_token'})['value']
 

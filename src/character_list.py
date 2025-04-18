@@ -16,7 +16,7 @@ class CharacterScraper:
     def get_max_page(self):
         """Fetches the user's character list and determines the highest page number."""
         character_list_url = f"https://www.adventurersleaguelog.com/users/{self.user_id}/characters?page=1"
-        response = self.session.get(character_list_url, verify=False)
+        response = self.session.get(character_list_url)
 
         if response.status_code != 200:
             print("Error fetching character list page.")
@@ -41,7 +41,7 @@ class CharacterScraper:
 
         for page_num in range(1, max_page + 1):
             character_list_url = f"https://www.adventurersleaguelog.com/users/{self.user_id}/characters?page={page_num}"
-            response = self.session.get(character_list_url, verify=False)
+            response = self.session.get(character_list_url)
 
             if response.status_code != 200:
                 print(f"Error fetching character list for page {page_num}. Skipping.")
@@ -82,11 +82,11 @@ class CharacterScraper:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scrape all characters and save to JSON.")
-    parser.add_argument("-o", "--output", type=str, help="Specify an alternate output file")
+    parser.add_argument("-j", "--jsonfile", type=str, help="Specify an alternate output file")
 
     args = parser.parse_args()
 
     scraper = CharacterScraper()
     scraper.scrape_character_data()
-    scraper.save_json(args.output)
+    scraper.save_json(args.jsonfile)
 
