@@ -4,9 +4,12 @@ import argparse
 import os
 
 class CharacterCSVParser:
-    def __init__(self, filename, json_file="characters.json"):
-        self.filename = filename
+    def __init__(self, character_id, csv_file, json_file, add_if_missing=False):
+        """Initialize the parser with character ID, CSV file, and JSON file."""
+        self.filename = csv_file
         self.json_file = json_file
+        self.character_id = character_id
+        self.add_if_missing = add_if_missing
         self.character_data = {"sessions": [], "magic_items": []}  # Ensure initialization
 
     def parse_csv(self):
@@ -75,14 +78,16 @@ class CharacterCSVParser:
         else:
             all_characters = []
 
-        existing_character = next((char for char in all_characters if char.get("name") == self.character_data["name"]), None)
-
-        if existing_character:
+        if self.character_id in all_characters:
+            existing_character = all_characters[self.character_id]
             print(f"Updating existing character: {self.character_data['name']}")
             existing_character.update(self.character_data)
-        else:
+        elif self.add_if_missing:
             print(f"Adding new character: {self.character_data['name']}")
-            all_characters.append(self.character_data)
+            all_characters[self.character_id] = self.character_data
+        else:   
+            print(f"Character ID {self.character_id} not found in JSON file. Use --add to add it. Aborting.")
+            return  # Exit gracefully instead of crashing
 
         with open(self.json_file, "w", encoding="utf-8") as file:
             json.dump(all_characters, file, indent=4)
@@ -90,11 +95,14 @@ class CharacterCSVParser:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse character CSV file and update characters.json.")
-    parser.add_argument("filename", help="Path to the CSV file")
+    parser.add_argument("-c", "--csv", required=True, type=str, help="Path to the individual character CSV file")
+    parser.add_argument("-j", "--json", required=True, type=str, help="Path to the characters JSON file")
+    parser.add_argument("-i", "--id", required=True, type=str, help="Character id to parse")
+    parser.add_argument("-a", "--add", action="store_true", help="Add character to JSON file if not already present")
 
     args = parser.parse_args()
 
-    csv_parser = CharacterCSVParser(args.filename)
+    csv_parser = CharacterCSVParser(args.id, args.csv, args.json, args.add)
     csv_parser.parse_csv()
     csv_parser.update_json()
 

@@ -12,7 +12,7 @@ class CSVDownloader:
         self.csv_url = f"https://www.adventurersleaguelog.com/users/{self.user_id}/characters/{character_id}.csv"
 
     def download_csv(self, filename=None):
-        response = self.session.get(self.csv_url, verify=False)
+        response = self.session.get(self.csv_url)
         if response.status_code == 200:
             filename = filename or f"character_{self.character_id}.csv"
             with open(filename, "wb") as file:
@@ -23,14 +23,14 @@ class CSVDownloader:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download a CSV for a given character ID.")
-    parser.add_argument("character_id", type=int, help="Number of the character to download")
-    parser.add_argument("-o", "--output", type=str, help="Optional output filename")
+    parser.add_argument("-i", "--character_id", required=True, type=str, help="Number of the character to download")
+    parser.add_argument("-c", "--csvfile", required=True, type=str, help="Optional output filename")
 
     args = parser.parse_args()
 
-    print(f"downlaoding character id {args.character_id} to {args.output}")
+    print(f"downlaoding character id {args.character_id} to {args.csvfile}")
 
 
     downloader = CSVDownloader(args.character_id)
-    downloader.download_csv(args.output)
+    downloader.download_csv(args.csvfile)
 
