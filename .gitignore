@@ -50,3 +50,7 @@ coverage.xml
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+#Output / scratch data
+out/
+scratch/
