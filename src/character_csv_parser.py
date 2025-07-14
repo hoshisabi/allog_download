@@ -16,45 +16,39 @@ class CharacterCSVParser:
         """Parse CSV and extract session details and magic items."""
         with open(self.filename, mode="r", encoding="utf-8") as file:
             reader = csv.reader(file)
-            is_parsing_sessions = False  # Flag to start parsing sessions
 
             for row in reader:
                 if not row or len(row) < 2:  # Ignore empty or malformed rows
                     continue
 
-                # Check if we reached the session data section
-                if row[0] == "type" and row[1] == "adventure_title":
-                    is_parsing_sessions = True
-                    continue  # Skip the header row
+                # Process session log entries, but ignore header (Adventure Title is the second item in the header)
+                if row[0] in ["CharacterLogEntry", "DmLogEntry"] and row[1] != "Adventure Title":
+                    self.character_data["sessions"].append({
+                        "type": row[0],
+                        "adventure_title": row[1],
+                        "session_number": row[2] if row[2] else None,
+                        "date_played": row[3] if row[3] else None,
+                        "session_length_hours": row[4] if row[4] else None,
+                        "player_level": row[5] if row[5] else None,
+                        "xp_gained": float(row[6]) if row[6] else None,
+                        "gp_gained": float(row[7]) if row[7] else None,
+                        "downtime_gained": float(row[8]) if row[8] else None,
+                        "renown_gained": float(row[9]) if row[9] else None,
+                        "location_played": row[11] if len(row) > 11 else None,
+                        "dm_name": row[12] if len(row) > 12 else None,
+                        "notes": row[14] if len(row) > 14 else None
+                    })
 
-                if is_parsing_sessions:
-                    # Parse session data
-                    if row[0] in ["CharacterLogEntry", "DmLogEntry"]:
-                        self.character_data["sessions"].append({
-                            "type": row[0],
-                            "adventure_title": row[1],
-                            "session_number": row[2] if row[2] else None,
-                            "date_played": row[3] if row[3] else None,
-                            "session_length_hours": row[4] if row[4] else None,
-                            "player_level": row[5] if row[5] else None,
-                            "xp_gained": float(row[6]) if row[6] else None,
-                            "gp_gained": float(row[7]) if row[7] else None,
-                            "downtime_gained": float(row[8]) if row[8] else None,
-                            "renown_gained": float(row[9]) if row[9] else None,
-                            "location_played": row[11] if len(row) > 11 else None,
-                            "dm_name": row[12] if len(row) > 12 else None,
-                            "notes": row[14] if len(row) > 14 else None
-                        })
-
-                    # Parse magic item data
-                    elif row[0] == "MAGIC ITEM" and len(row) >= 4:
-                        magic_item = {
-                            "name": row[1],
-                            "rarity": row[2],
-                            "location_found": row[3]
-                        }
-                        if magic_item["name"].lower() != "name":  # Filter placeholder entry
-                            self.character_data["magic_items"].append(magic_item)
+                # Process magic item entries, but ignore header (name is the second item in the header)
+                elif row[0] == "MAGIC ITEM" and row[1] != "name":
+                    self.character_data["magic_items"].append({
+                        "name": row[1],
+                        "rarity": row[2],
+                        "location_found": row[3],
+                        "table": row[4] if len(row) > 4 else None,
+                        "table_result": row[5] if len(row) > 5 else None,
+                        "notes": row[6] if len(row) > 6 else None
+                    })
 
     def update_json(self):
         """Updates characters.json with new character data or modifies existing entry."""
