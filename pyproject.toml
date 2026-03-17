@@ -1,0 +1,11 @@
+[project]
+name = "allog-download"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.15"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "fpdf>=1.7.2",
+    "requests>=2.32.5",
+]
