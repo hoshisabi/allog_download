@@ -1,26 +1,21 @@
 ## Project Context
 
-This project, `allog_download`, is a Python-based toolset for downloading and processing data from AdventurersLeagueLog.com. It includes scripts for downloading character and session data, parsing CSV files, and generating PDF reports from structured JSON data.
+This project, `allog_download`, is a toolset for downloading and processing data from AdventurersLeagueLog.com. The primary deliverable is a C# WPF app targeting non-programmer users. Python scripts in `src/` are legacy utilities that remain useful for batch operations and serve as a reference during the C# port.
 
 ## User Preferences
 
-- **Operating System**: Windows (win32). All shell commands should use `cmd.exe` syntax (e.g., `dir`, `copy`, `move`, `del`, `type`, `echo %VAR%`, and backslashes for paths).
-- **Commit Messages**: User prefers commit messages to be provided in a file, specifically `maintaindb/commit_message.txt`.
-
-## Outstanding Tasks
-
-- **Data Export Formats**: Functionality to convert the processed JSON data into CSV (for Excel compatibility) and Markdown formats. The JSON to CSV with zipping and JSON to Markdown (with options for single/per-character files and zipping) have been implemented.
-- **PDF Generation**: The PDF generation functionality is not fully working and is currently a lower priority.
-- **Distributables for Non-Programmers**: Investigate and implement methods to create easy-to-use distributables for users without programming knowledge. This will be re-evaluated after data export formats are addressed.
-- **User-Friendly GUI**: Develop a simple graphical user interface to allow non-developers to easily input information and interact with the tool.
-- **Secure Credential Storage**: Implement a secure method for storing user credentials (e.g., for AdventurersLeagueLog.com) in a non-plaintext format.
-
-## Future Tasks / Interests
-
-- **Scraping Bypass**: User is exploring creating a bookmarklet or browser extension to scrape DMsGuild page data (or full HTML) and save it to `maintaindb/_dc/` to bypass Cloudflare blocking automated scraping.
-- **GitHub Actions**: User is interested in setting up periodic execution of `dmsguild_rss_parser.py` (from the `al_adventure_catalog` project, but likely relevant here for automated data updates) using GitHub Actions. They will ask for help on how to do this later.
+- **Operating System**: Windows (win32). All commands should work on Windows.
 
 ## Development Environment
 
-- **Dependency Management**: `pipenv` is the preferred tool for managing Python dependencies.
+- **Python Dependency Management**: `uv` (not pipenv). Use `uv sync` to install, `uv run python ...` to run scripts.
+- **Python Version**: 3.15+
+- **C# IDE**: Visual Studio 2022 or JetBrains Rider; solution file is `Adventure League Log Downloader.sln`
 - **Project Root**: `f:\Users\decha\Documents\Projects\allog_download`
+
+## Architecture Notes
+
+- The C# WPF app (`Adventure League Log Downloader/`) is the active development target and will eventually absorb all Python script capabilities.
+- `main.py` in the project root is a `uv init` stub — not a real entry point.
+- Python scripts in `src/` are functional for: batch CSV download, CSV parsing, JSON→Markdown export, JSON→CSV/zip export. PDF generation is partially working and is the lowest priority item.
+- See `TASKS.md` for the full migration checklist and priorities.

@@ -5,7 +5,7 @@ import os
 
 class CharacterPDF(FPDF):
     def header(self):
-        self.set_font("Roboto", "B", 12)
+        self.set_font("DejaVuSans", "B", 12)
         self.cell(0, 10, "Character Report", border=0, ln=1, align="C")
         self.ln(10)
 
@@ -14,9 +14,9 @@ class CharacterPDF(FPDF):
         self.add_page()
 
         # Add character ID and basic information in a compact/tabular format
-        self.set_font("Roboto", "B", 10)
+        self.set_font("DejaVuSans", "B", 10)
         self.cell(0, 10, f"Character ID: {character_id}", ln=1)
-        self.set_font("Roboto", "", 10)
+        self.set_font("DejaVuSans", "", 10)
 
         # Create a table-like structure for character details
         details = [
@@ -34,18 +34,18 @@ class CharacterPDF(FPDF):
         # Add magic items section
         if "magic_items" in character_data and character_data["magic_items"]:
             self.ln(5)
-            self.set_font("Roboto", "B", 10)
+            self.set_font("DejaVuSans", "B", 10)
             self.cell(0, 10, "Magic Items:", ln=1)
-            self.set_font("Roboto", "", 10)
+            self.set_font("DejaVuSans", "", 10)
             for item in character_data["magic_items"]:
                 self.multi_cell(0, 8, f"- {item['name']} ({item['rarity']}) - Found at: {item.get('location_found', 'Unknown')}")
 
         # Add sessions section
         if "sessions" in character_data and character_data["sessions"]:
             self.ln(5)
-            self.set_font("Roboto", "B", 10)
+            self.set_font("DejaVuSans", "B", 10)
             self.cell(0, 10, "Sessions:", ln=1)
-            self.set_font("Roboto", "", 10)
+            self.set_font("DejaVuSans", "", 10)
             for session in character_data["sessions"]:
                 self.multi_cell(0, 8, f"- {session['adventure_title']} ({session['date_played']})\n"
                                       f"  XP: {session.get('xp_gained', 'N/A')}, GP: {session.get('gp_gained', 'N/A')}, "
@@ -68,9 +68,9 @@ def generate_pdf(json_file, output_pdf):
     font_path_bold = os.path.join(script_dir, "DejaVuSans-Bold.ttf")
 
     # Use a Unicode-compatible font
-    pdf.add_font("Roboto", "", font_path, uni=True)
-    pdf.add_font("Roboto", "B", font_path_bold, uni=True)
-    pdf.set_font("Roboto", "", 10)
+    pdf.add_font("DejaVuSans", "", font_path, uni=True)
+    pdf.add_font("DejaVuSans", "B", font_path_bold, uni=True)
+    pdf.set_font("DejaVuSans", "", 10)
 
     # Add each character to the PDF
     for character_id, character_data in characters.items():

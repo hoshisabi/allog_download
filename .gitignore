@@ -1,9 +1,13 @@
 # allog_download
 .venv/
 out/
+bin/
+.vs/
+.idea/
+obj/
 build/
 dist/
-*.spec
+.env
 *.pyc
 __pycache__/
 dmsessions.json

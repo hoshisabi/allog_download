@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <RootNamespace>Adventure_League_Log_Downloader</RootNamespace>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        
+        <Version>1.0.0</Version>
+        <Authors>Adventurers League Community</Authors>
+        <Company>Adventurers League</Company>
+        <Description>A tool to download character logs from Adventurers League.</Description>
+        <Copyright>Copyright © 2026</Copyright>
+        
+        <!-- Publishing configuration -->
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.60" />
+    <PackageReference Include="CredentialManagement" Version="1.0.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Enable Windows Forms only to use FolderBrowserDialog for folder picking -->
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+</Project>

@@ -1,186 +1,139 @@
 # allog_download
-A set of files to download your data from AdventurersLeagueLog.com
 
-## **How to Install and Run the Scripts**
+A collection of Python scripts designed to download and process data from AdventurersLeagueLog.com. This project facilitates the extraction of character and session data, enabling local storage and generation of reports (e.g., PDFs).
 
-### **1. Install Python**
+## Features
 
-All of the scripts in this package are written in python, which many machines may already have installed. If you're on Windows, you might have to install it. Follow the next few steps to 
+*   **Character Data Download:** Scripts to download character information, likely in CSV format.
+*   **CSV Parsing:** Tools to parse downloaded CSV files and convert them into structured data (e.g., JSON).
+*   **PDF Generation:** Ability to generate character reports in PDF format from processed JSON data.
 
-1. **Download Python**:
-   - Go to the [official Python website](https://www.python.org/downloads/).
-   - Download the latest version of Python (3.10 or later is recommended).
+## Setup and Installation
 
-2. **Install Python**:
-   - During installation, **check the box** that says **"Add Python to PATH"**.
-   - Select the option to install Python for all users.
-   - Complete the installation process.
+This project requires Python 3.8+ and uses `pipenv` for dependency management.
 
-3. **Verify Installation**:
-   - Open a terminal (Command Prompt or PowerShell on Windows).
-   - Run the following command to verify Python is installed:
-     ```powershell
-     python --version
-     ```
-   - You should see the installed Python version (e.g., `Python 3.10.x`).
+### 1. Clone the Repository
 
----
+```bash
+git clone https://github.com/your-username/allog_download.git
+cd allog_download
+```
 
-### **2. Install pip (Python Package Manager)**
-- `pip` is usually installed with Python by default. To verify:
-  ```powershell
-  pip --version
-  ```
-- If `pip` is not installed, follow the instructions [here](https://pip.pypa.io/en/stable/installation/).
+### 2. Install Dependencies
 
----
+It is highly recommended to use `pipenv` to manage project dependencies in a virtual environment.
 
-### **3. Install Virtualenv (Optional but Recommended)**
-A virtual environment isolates your Python dependencies, ensuring they don’t interfere with other projects.
+```bash
+pip install pipenv
+pipenv install
+pipenv shell
+```
 
-1. **Install `virtualenv`**:
-   ```powershell
-   pip install virtualenv
-   ```
+If you prefer `pip` and `virtualenv`:
 
-2. **Create a Virtual Environment**:
-   - Navigate to the folder where the scripts are located:
-     ```powershell
-     cd path\to\your\scripts
-     ```
-   - Create a virtual environment:
-     ```powershell
-     python -m virtualenv venv
-     ```
+```bash
+python -m venv .venv
+.venv\Scripts\activate   # On Windows
+source .venv/bin/activate # On macOS/Linux
+pip install -r requirements.txt
+```
 
-3. **Activate the Virtual Environment**:
-   - On Windows:
-     ```powershell
-     venv\Scripts\activate
-     ```
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
+### 3. Download Required Fonts
 
-4. **Verify Activation**:
-   - Your terminal prompt should now show `(venv)` at the beginning.
+For PDF generation, the `DejaVuSans.ttf` font is required.
 
----
+1.  Download `DejaVuSans.ttf` from [DejaVu Fonts](https://dejavu-fonts.github.io/).
+2.  Place the `DejaVuSans.ttf` file in the `src/` directory.
 
-### **4. Install Required Libraries**
-The scripts depend on several Python libraries. Install them using `pip`.
+## Usage
 
-1. **Navigate to the Script Directory**:
-   ```powershell
-   cd path\to\your\scripts
-   ```
+The `src/` directory contains the main scripts. Here are some common use cases:
 
-2. **Install Dependencies**:
-   - Run the following command to install the required libraries:
-     ```powershell
-     pip install fpdf beautifulsoup4 requests
-     ```
+*   **Generate PDF from JSON:**
+    ```bash
+    python src/characters_json_to_pdf.py -j <input_json_file> -o <output_pdf_file>
+    ```
+*   **Parse Character CSV:**
+    ```bash
+    python src/character_csv_parser.py -c <input_csv_file> -j <output_json_file> -i <character_id>
+    ```
+*   **Download All CSVs:**
+    ```bash
+    python src/download_all_csv.py
+    ```
 
-3. **Verify Installation**:
-   - Run the following command to check installed libraries:
-     ```powershell
-     pip list
-     ```
+Refer to individual script help (`python script_name.py --help`) for more options.
 
----
+## Project Structure
 
-### **5. Download Required Fonts**
-For Unicode support in the PDF generation script, you need the `DejaVuSans.ttf` font.
-
-1. **Download the Font**:
-   - Download `DejaVuSans.ttf` from [DejaVu Fonts](https://dejavu-fonts.github.io/).
-
-2. **Place the Font**:
-   - Save the `DejaVuSans.ttf` file in the same directory as the scripts.
-
----
-
-### **6. Run the Scripts**
-1. **Prepare Input Files**:
-   - Ensure you have the required input files (e.g., `characters.json` or CSV files) in the appropriate format.
-
-2. **Run the Scripts**:
-   - Example: Generate a PDF from `characters.json`:
-     ```bash
-     python characters_json_to_pdf.py -j characters.json -o characters_report.pdf
-     ```
-   - Example: Parse a CSV file and update `characters.json`:
-     ```bash
-     python character_csv_parser.py -c character_24436.csv -j characters.json -i 24436
-     ```
-
-3. **Check the Output**:
-   - The output files (e.g., `characters_report.pdf`) will be saved in the specified location.
-
----
-
-### **7. Troubleshooting**
-- **Python Not Found**:
-  - Ensure Python is added to your system PATH during installation.
-  - Restart your terminal and try again.
-
-- **Missing Libraries**:
-  - If you see an error like `ModuleNotFoundError`, ensure you’ve installed the required libraries using `pip`.
-
-- **Font Not Found**:
-  - Ensure `DejaVuSans.ttf` is in the same directory as the script or update the script to point to the correct path.
-
----
-
-### **8. Optional: Share the Scripts**
-If you’re sharing these scripts with others:
-1. **Include a `requirements.txt` File**:
-   - Create a `requirements.txt` file with the following content:
-     ```
-     fpdf
-     beautifulsoup4
-     requests
-     ```
-   - Users can install all dependencies with:
-     ```bash
-     pip install -r requirements.txt
-     ```
-
-2. **Provide Clear Instructions**:
-   - Share this guide or create a `README.md` file with similar instructions.
-
----
-
-### **9. Example Directory Structure**
-Here’s an example of how your project directory might look:
 ```
 allog_download/
-├── src/
-│   ├── character_csv_parser.py
-│   ├── characters_json_to_pdf.py
-│   ├── csv_download.py
-│   ├── character_list.py
-│   └── DejaVuSans.ttf
-├── out/
-│   ├── characters.json
-│   ├── character_24436.csv
-│   └── characters_report.pdf
-└── README.md
+├── .env                    # Environment variables
+├── .gitignore              # Git ignore file
+├── Pipfile                 # Pipenv dependency definition
+├── Pipfile.lock            # Pipenv locked dependencies
+├── README.md               # Project README
+├── requirements.txt        # Pip dependencies (for pip users)
+├── src/                    # Main source code directory
+│   ├── auth.py             # Authentication related scripts
+│   ├── character_csv_parser.py # Parses character CSVs
+│   ├── character_list.py   # Manages character lists
+│   ├── characters_json_to_pdf.py # Generates PDFs from character JSON
+│   ├── csv_download.py     # Handles CSV downloading
+│   ├── dmsession_list.py   # Manages DM session lists
+│   └── ...                 # Other utility scripts
+├── build/                  # Build artifacts (e.g., compiled scripts)
+├── dist/                   # Distribution files
+├── maintaindb/             # Database maintenance scripts/data
+├── out/                    # Output files (e.g., generated PDFs, JSONs)
+└── .venv/                  # Python virtual environment (if using virtualenv)
 ```
+
+## Troubleshooting
+
+*   **`ModuleNotFoundError`**: Ensure all dependencies are installed using `pipenv install` or `pip install -r requirements.txt` within your activated virtual environment.
+*   **Font Issues**: Verify `DejaVuSans.ttf` is correctly placed in the `src/` directory.
 
 ---
 
-### **10. Next Steps**
-- Test the scripts with your data.
-- Share the scripts and instructions with others.
-- Gather feedback and refine the scripts as needed.
 
-Let me know if you’d like help creating a `README.md` file or packaging the scripts for easier distribution! 😊---
+## C# WPF App (Adventure League Log Downloader)
 
-### **10. Next Steps**
-- Test the scripts with your data.
-- Share the scripts and instructions with others.
-- Gather feedback and refine the scripts as needed.
+A modern WPF application targeting .NET 9.0 that ports the original Python functionality to a standalone Windows application.
 
-Let me know if you’d like help creating a `README.md` file or packaging the scripts for easier distribution! 😊
+### Features
+- Native Windows authentication via Credential Manager.
+- Scrapes character lists and logs directly from AdventurersLeagueLog.com.
+- Export to JSON (and more formats coming soon).
+
+### Installation & Distribution
+
+#### Sharing with Friends
+To share the application with someone else:
+1.  **Locate the Distributable:** Go to the `dist` folder in the project root.
+2.  **Send the ZIP:** Share `Adventure_League_Log_Downloader_v1.0.0.zip` with them.
+3.  **Recipient Requirements:**
+    *   They must be running **Windows (x64)**.
+    *   They need the **.NET 9 Desktop Runtime** installed. They can download it from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/9.0).
+4.  **How to Run:**
+    *   Extract the ZIP file.
+    *   Run `Adventure League Log Downloader.exe`.
+
+#### Building and Publishing
+To create a fresh single-file executable for distribution:
+
+```powershell
+dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
+```
+
+The output will be located in:
+`Adventure League Log Downloader\bin\Release\net9.0-windows\publish\win-x64\Adventure League Log Downloader.exe`
+
+### Development
+- Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Rider.
+- Target Framework: `.NET 9.0-windows`.
+- Requires `HtmlAgilityPack` and `CredentialManagement` NuGet packages.
+
+---
+
+## Legacy Python Utilities
