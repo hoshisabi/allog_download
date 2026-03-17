@@ -20,7 +20,13 @@ Checked items are completed. Unchecked are pending.
 - [x] Proper StatusBar docked at the bottom; menu with File/Options/Help
 - [x] Options → Delay… dialog to configure/persist network delay
 - [x] "Remember credentials" checkbox, enabled when secure storage available; loads/saves via credential store
-- [ ] Non-blocking runs (async with UI responsiveness; disable/enable inputs for all long tasks)
+- [ ] **UI Cleanup & Standardization** — *BLOCKING PREREQUISITE (do before features in sections 4–6)*
+  - [ ] Audit and standardize all buttons (sizing, padding, font, colors) per Standard WPF best practices
+  - [ ] Standardize form layout (consistent spacing, alignment, input field widths)
+  - [ ] Ensure proper tab order and keyboard navigation across all controls
+  - [ ] Apply consistent styling (brushes, fonts, themes) to match WPF conventions
+  - [ ] Add visual feedback for focused/disabled states
+- [ ] Non-blocking runs (async with UI responsiveness; disable/enable inputs for all long tasks) — *ESSENTIAL FOR MVP; implement alongside Section 4 features*
 - [ ] Progress bar + Cancel button during long-running operations
 - [ ] Error surface improvements (step-specific errors; link to logs)
 - [ ] Validate all fields with inline hints; preserve focus/selection on errors
@@ -34,7 +40,7 @@ Checked items are completed. Unchecked are pending.
 - [x] Verify login and discover `userId` from returned HTML
 - [x] Wire Run to authenticate using supplied credentials
 - [ ] "Forget credentials" action in menu; explanatory tooltip/help text
-- [ ] Cross-platform credential store abstraction (macOS Keychain, Linux Secret Service) with `IsAvailable` gating
+- [ ] Cross-platform credential store abstraction — *WINDOWS ONLY FOR MVP*; macOS Keychain and Linux Secret Service can be added in future iterations
 
 ---
 
@@ -50,8 +56,8 @@ Checked items are completed. Unchecked are pending.
 ---
 
 ## 5) Data: downloading and parsing (port from Python)
-- [ ] Per-character session log downloads (detailed pages per character)
-- [ ] DM session list scraping (`dmsession_list.py` → C#)
+- [ ] **Per-character session log downloads** (detailed pages per character) — *PRIORITY: Do before DM sessions*
+- [ ] DM session list scraping (`dmsession_list.py` → C#) — *lower priority; can follow after session logs*
 - [ ] CSV ingest parity where Python scripts relied on downloaded CSVs as input
 
 ---
@@ -63,13 +69,14 @@ Checked items are completed. Unchecked are pending.
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
 - [ ] DM sessions JSON/CSV export
 - [ ] Per-character session JSON/CSV export
-- [ ] **Moonsea Codex (MSC) export** — convert characters JSON to MSC import format
+- [ ] **Moonsea Codex (MSC) export** — *LOWEST PRIORITY (last task before stretch goals)*
   - Reference schema: `docs/examples/msc-export-*.json`
-  - MSC item rarity uses snake_case (`very_rare`, `uncommon`, etc.) — normalize on export (the allog import has an inconsistency: `"veryrare"` vs `"very_rare"`)
+  - Convert characters JSON to MSC import format
   - `gold`/`downtime` should be numbers (default `0`), not null
   - `classes` must be array of `{name, value, subclass}`
   - Stats (`ac`, `hp`, `pp`, `dc`) not tracked by allog — export as `0`
   - `sheet` field can carry a D&D Beyond URL if available
+  - Rarity normalization: defer decision until implementation phase (low priority)
 - [ ] Option: append timestamp to filenames
 
 ---
