@@ -1,0 +1,71 @@
+<Window x:Class="Adventure_League_Log_Downloader.DataLocationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Data location" Height="220" Width="520" MinWidth="440"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid Margin="16,14,16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="140"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="0" Grid.Column="0"
+               Style="{StaticResource FormLabel}"
+               Target="{Binding ElementName=FolderTextBox}">
+            <AccessText Text="_Folder"/>
+        </Label>
+        <TextBox x:Name="FolderTextBox"
+                 Grid.Row="0" Grid.Column="1"
+                 Margin="{StaticResource FormFieldMargin}"
+                 TabIndex="0"
+                 AutomationProperties.Name="Data folder"/>
+        <Button Grid.Row="0" Grid.Column="2"
+                Margin="{StaticResource FormFieldMarginLastCol}"
+                VerticalAlignment="Center"
+                TabIndex="1"
+                Click="OnBrowseClick"
+                Content="_Browse…"/>
+
+        <Label Grid.Row="1" Grid.Column="0"
+               Style="{StaticResource FormLabel}"
+               Target="{Binding ElementName=FileNameTextBox}">
+            <AccessText Text="_File name"/>
+        </Label>
+        <TextBox x:Name="FileNameTextBox"
+                 Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                 Margin="{StaticResource FormFieldMarginLastCol}"
+                 TabIndex="2"
+                 AutomationProperties.Name="Characters JSON file name"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                   Text="The app saves your character list here. You can change this if you use multiple accounts or backups."/>
+
+        <StackPanel Grid.Row="4"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Margin="0,14,0,0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Margin="0,0,10,0"
+                    TabIndex="3"
+                    IsDefault="True"
+                    Click="OnOkClick"
+                    Content="_OK"/>
+            <Button TabIndex="4"
+                    IsCancel="True"
+                    Content="_Cancel"/>
+        </StackPanel>
+    </Grid>
+</Window>

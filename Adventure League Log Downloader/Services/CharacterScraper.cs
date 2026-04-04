@@ -86,18 +86,40 @@ public sealed class CharacterScraper
 
     /// <summary>
     /// Scrapes all pages and returns a dictionary keyed by character id.
+    /// Reports progress after pagination discovery and after each page is parsed.
     /// </summary>
-    public async Task<IReadOnlyDictionary<string, CharacterRecord>> ScrapeAsync(double delaySeconds = 0.25, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<string, CharacterRecord>> ScrapeAsync(
+        double delaySeconds = 0.25,
+        IProgress<CharacterScrapeReport>? progress = null,
+        CancellationToken ct = default)
     {
         _characters.Clear();
 
         var client = await _auth.GetAuthenticatedClientAsync();
         var userId = await _auth.GetUserIdAsync();
 
+        progress?.Report(new CharacterScrapeReport
+        {
+            Phase = CharacterScrapePhase.DiscoveringPages,
+            CharacterCount = 0,
+            Characters = Array.Empty<CharacterRecord>(),
+            Detail = "Checking how many pages of characters exist…"
+        });
+
         var maxPage = await GetMaxPageAsync(ct);
         if (maxPage < 1) maxPage = 1;
 
-        int totalParsed = 0;
+        progress?.Report(new CharacterScrapeReport
+        {
+            Phase = CharacterScrapePhase.DiscoveringPages,
+            TotalPages = maxPage,
+            CharacterCount = 0,
+            Characters = Array.Empty<CharacterRecord>(),
+            Detail = maxPage == 1
+                ? "Found 1 page; will probe for more if the site hides pagination."
+                : $"Found {maxPage} pages to load."
+        });
+
         for (var page = 1; page <= maxPage; page++)
         {
             ct.ThrowIfCancellationRequested();
@@ -106,13 +128,30 @@ public sealed class CharacterScraper
             using var resp = await client.GetAsync(url, ct);
             if (!resp.IsSuccessStatusCode)
             {
-                // Skip this page, continue with next
+                progress?.Report(new CharacterScrapeReport
+                {
+                    Phase = CharacterScrapePhase.Scraping,
+                    CurrentPage = page,
+                    TotalPages = maxPage,
+                    CharacterCount = _characters.Count,
+                    Characters = SnapshotCharacters(),
+                    Detail = $"Page {page} of {maxPage}: HTTP {(int)resp.StatusCode}; skipped."
+                });
                 continue;
             }
 
             var html = await resp.Content.ReadAsStringAsync(ct);
-            var parsed = ParseCharacterTable(html);
-            totalParsed += parsed;
+            _ = ParseCharacterTable(html);
+
+            progress?.Report(new CharacterScrapeReport
+            {
+                Phase = CharacterScrapePhase.Scraping,
+                CurrentPage = page,
+                TotalPages = maxPage,
+                CharacterCount = _characters.Count,
+                Characters = SnapshotCharacters(),
+                Detail = $"Page {page} of {maxPage}: loaded {_characters.Count} character(s) so far."
+            });
 
             if (delaySeconds > 0)
             {
@@ -136,6 +175,16 @@ public sealed class CharacterScraper
                 if (parsed <= 0)
                     break; // stop when a page yields no rows
 
+                progress?.Report(new CharacterScrapeReport
+                {
+                    Phase = CharacterScrapePhase.Scraping,
+                    CurrentPage = page,
+                    TotalPages = null,
+                    CharacterCount = _characters.Count,
+                    Characters = SnapshotCharacters(),
+                    Detail = $"Extra page {page}: loaded {_characters.Count} character(s) so far."
+                });
+
                 if (delaySeconds > 0)
                 {
                     var delayMs = (int)Math.Round(delaySeconds * 1000);
@@ -145,6 +194,13 @@ public sealed class CharacterScraper
         }
 
         return _characters;
+    }
+
+    private List<CharacterRecord> SnapshotCharacters()
+    {
+        return _characters.Values
+            .OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private int ParseCharacterTable(string html)

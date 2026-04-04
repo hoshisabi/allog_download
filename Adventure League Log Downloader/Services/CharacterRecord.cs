@@ -13,4 +13,9 @@ public sealed class CharacterRecord
     public string Level { get; set; } = string.Empty;
     public string Season { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Latest <c>date_played</c> from the character CSV session log (set after CSV download / when loading from CSV on disk).
+    /// </summary>
+    public string? LastSessionPlayed { get; set; }
 }
