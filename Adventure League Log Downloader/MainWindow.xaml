@@ -18,6 +18,7 @@
                 <MenuItem Header="_Data location..." Click="OnDataLocationClick"/>
                 <MenuItem Header="_Delay..." Click="OnDelayOptionsClick"/>
                 <Separator/>
+                <MenuItem Header="Open _Files in Explorer" Click="OnOpenDataFilesInExplorerClick"/>
                 <MenuItem Header="Open Settings _Folder" Click="OnOpenSettingsFolderClick"/>
             </MenuItem>
             <MenuItem Header="_Help">

@@ -21,12 +21,12 @@ public sealed class CharacterCsvDownloader
     }
 
     /// <summary>
-    /// Writes <c>character_{id}.csv</c> for each id into <paramref name="csvDirectory"/> using the configured network delay between requests.
+    /// Writes <c>character_{id}.csv</c> for each id into <paramref name="characterDataDirectory"/> (same folder as the characters JSON).
     /// </summary>
     /// <returns>Number of characters for which the HTTP request did not succeed.</returns>
     public async Task<int> DownloadAllAsync(
         IReadOnlyList<string> characterIdsOrdered,
-        string csvDirectory,
+        string characterDataDirectory,
         double delaySeconds,
         IProgress<CharacterScrapeReport>? progress,
         IReadOnlyList<CharacterRecord> charactersForUiSnapshot,
@@ -37,7 +37,7 @@ public sealed class CharacterCsvDownloader
         var client = await _auth.GetAuthenticatedClientAsync();
         var userId = await _auth.GetUserIdAsync();
 
-        Directory.CreateDirectory(csvDirectory);
+        Directory.CreateDirectory(characterDataDirectory);
 
         var total = characterIdsOrdered.Count;
         if (total == 0)
@@ -50,7 +50,7 @@ public sealed class CharacterCsvDownloader
             ct.ThrowIfCancellationRequested();
 
             var id = characterIdsOrdered[i];
-            var path = Path.Combine(csvDirectory, $"character_{id}.csv");
+            var path = Path.Combine(characterDataDirectory, $"character_{id}.csv");
             var relativeUrl = $"/users/{userId}/characters/{Uri.EscapeDataString(id)}.csv";
 
             progress?.Report(new CharacterScrapeReport
@@ -95,13 +95,22 @@ public sealed class CharacterCsvDownloader
     }
 
     /// <summary>
-    /// Default folder for CSV files: a <c>csv</c> directory next to the characters JSON file.
+    /// Folder that holds the characters JSON and per-character CSVs — the user’s chosen data directory.
+    /// Same layout as Python <c>download_all_csv</c>: <c>character_{id}.csv</c> next to the JSON file (no extra subfolder).
     /// </summary>
-    public static string GetDefaultCsvDirectory(string charactersJsonPath)
+    public static string GetCharacterDataDirectory(string charactersJsonPath)
     {
-        var dir = Path.GetDirectoryName(charactersJsonPath);
-        if (string.IsNullOrWhiteSpace(dir))
-            dir = Directory.GetCurrentDirectory();
-        return Path.Combine(dir, "csv");
+        try
+        {
+            var dir = Path.GetDirectoryName(Path.GetFullPath(charactersJsonPath));
+            if (!string.IsNullOrWhiteSpace(dir))
+                return dir;
+        }
+        catch
+        {
+            // fall through
+        }
+
+        return Directory.GetCurrentDirectory();
     }
 }

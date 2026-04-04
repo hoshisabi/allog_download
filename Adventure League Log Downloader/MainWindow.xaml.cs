@@ -90,6 +90,52 @@ public partial class MainWindow : Window
             MessageBoxImage.Information);
     }
 
+    private void OnOpenDataFilesInExplorerClick(object sender, RoutedEventArgs e)
+    {
+        var folder = _settings.OutputFolder?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            System.Windows.MessageBox.Show(this,
+                "Set a data folder first (Options → Data location).",
+                "Open Files in Explorer",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(folder);
+
+            var fileName = _settings.OutputFileName?.Trim() ?? string.Empty;
+            var jsonPath = string.IsNullOrWhiteSpace(fileName)
+                ? null
+                : Path.Combine(folder, fileName);
+
+            if (!string.IsNullOrWhiteSpace(jsonPath) && File.Exists(jsonPath))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{jsonPath}\"",
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = folder,
+                    UseShellExecute = true
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(this, ex.Message, "Open Files in Explorer", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void OnOpenSettingsFolderClick(object sender, RoutedEventArgs e)
     {
         try
@@ -145,20 +191,20 @@ public partial class MainWindow : Window
             var results = await scraper.ScrapeAsync(_settings.DelaySeconds, progress);
 
             var sorted = results.Values.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            var csvDir = CharacterCsvDownloader.GetDefaultCsvDirectory(outputPath);
+            var dataDir = CharacterCsvDownloader.GetCharacterDataDirectory(outputPath);
             var ids = sorted.Select(c => c.Id).ToList();
             var csvFailed = 0;
             if (ids.Count > 0)
             {
                 StatusText.Text = "Downloading CSV files…";
                 var csvDownloader = new CharacterCsvDownloader(auth);
-                csvFailed = await csvDownloader.DownloadAllAsync(ids, csvDir, _settings.DelaySeconds, progress, sorted);
+                csvFailed = await csvDownloader.DownloadAllAsync(ids, dataDir, _settings.DelaySeconds, progress, sorted);
             }
 
             var previousById = await CharacterJsonFile.TryLoadDictionaryAsync(outputPath);
             foreach (var c in sorted)
             {
-                CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, csvDir);
+                CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, outputPath);
                 if (!string.IsNullOrWhiteSpace(c.LastSessionPlayed))
                     continue;
                 if (previousById != null && previousById.TryGetValue(c.Id, out var prev) && !string.IsNullOrWhiteSpace(prev.LastSessionPlayed))
@@ -185,8 +231,8 @@ public partial class MainWindow : Window
             var csvDetail = ids.Count == 0
                 ? "No characters to download CSVs for."
                 : csvFailed == 0
-                    ? $"Downloaded {csvOk} character CSV file(s) to csv\\."
-                    : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). Files in csv\\.";
+                    ? $"Downloaded {csvOk} character CSV file(s) next to your character list."
+                    : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). CSVs are next to your character list.";
 
             progress.Report(new CharacterScrapeReport
             {
@@ -199,7 +245,7 @@ public partial class MainWindow : Window
             StatusText.Text = "Done";
             var successBody = ids.Count == 0
                 ? $"Character list saved to:\n{outputPath}"
-                : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({csvOk} ok{(csvFailed > 0 ? $", {csvFailed} failed" : "")}):\n{csvDir}";
+                : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({csvOk} ok{(csvFailed > 0 ? $", {csvFailed} failed" : "")}):\n{dataDir}";
             System.Windows.MessageBox.Show(this, successBody, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
@@ -329,12 +375,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        var csvDir = CharacterCsvDownloader.GetDefaultCsvDirectory(path);
         foreach (var c in list)
         {
-            CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, csvDir);
+            CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, path);
             _characterPreview.Add(c);
         }
+
+        CharactersDataGrid.Items.Refresh();
 
         CharactersPreviewSummary.Text =
             $"Showing {list.Count} character(s) from {Path.GetFileName(path)} ({path}).";
@@ -388,5 +435,8 @@ public partial class MainWindow : Window
         {
             StatusText.Text = "Error";
         }
+
+        // Ensure "Last session" and other bound fields refresh when records are mutated in place.
+        CharactersDataGrid.Items.Refresh();
     }
 }
