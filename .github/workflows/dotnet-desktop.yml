@@ -1,7 +1,7 @@
-# Build and publish the WPF app (win-x64, FolderProfile).
-# Artifacts appear under each successful run on main (Actions → workflow run → Artifacts).
-# FolderProfile is framework-dependent; end users need the .NET 9 Desktop Runtime on Windows x64,
-# unless you publish self-contained locally for releases.
+# Build and publish the WPF app (win-x64).
+# Artifacts (main / manual only):
+#   - *-framework: needs .NET 9 Windows Desktop Runtime installed.
+#   - *-selfcontained: all-in-one single-folder build (larger; no separate runtime install).
 
 name: WPF build
 
@@ -13,10 +13,13 @@ on:
   workflow_dispatch:
 
 env:
+  # Use Node 24 for JS-based actions (checkout, setup-dotnet, upload-artifact); Node 20 is deprecated on runners.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   DOTNET_VERSION: "9.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
-  PUBLISH_OUT: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64
+  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64
+  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64-selfcontained
 
 jobs:
   build:
@@ -38,13 +41,24 @@ jobs:
         if: github.event_name == 'pull_request'
         run: dotnet build "${{ env.SLN_PATH }}" -c Release --no-restore
 
-      - name: Publish (main & manual)
+      - name: Publish (framework-dependent)
         if: github.event_name != 'pull_request'
         run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=FolderProfile --no-restore
 
-      - name: Upload publish output
+      - name: Publish (self-contained, all-in-one)
+        if: github.event_name != 'pull_request'
+        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=SelfContainedProfile --no-restore
+
+      - name: Upload framework-dependent build
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: AdventurersLeagueLogDownloader-win-x64
-          path: ${{ env.PUBLISH_OUT }}
+          name: AdventurersLeagueLogDownloader-win-x64-framework
+          path: ${{ env.PUBLISH_OUT_FRAMEWORK }}
+
+      - name: Upload self-contained build
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdventurersLeagueLogDownloader-win-x64-selfcontained
+          path: ${{ env.PUBLISH_OUT_SELFCONTAINED }}
