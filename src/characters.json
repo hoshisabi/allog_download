@@ -1,0 +1,514 @@
+{
+    "983": {
+        "name": "Grep",
+        "race": "Forest gnome",
+        "class": "Wizard",
+        "level": "12",
+        "season": "Spelljammer",
+        "tag": ""
+    },
+    "24152": {
+        "name": "Arcadion",
+        "race": "Half elf",
+        "class": "Warlock",
+        "level": "20",
+        "season": "WBW",
+        "tag": ""
+    },
+    "24326": {
+        "name": "Osborne",
+        "race": "Hobgoblin",
+        "class": "Wizard",
+        "level": "11",
+        "season": "",
+        "tag": ""
+    },
+    "24424": {
+        "name": "Amos",
+        "race": "Dwarf",
+        "class": "Barbarian",
+        "level": "13",
+        "season": "",
+        "tag": ""
+    },
+    "24425": {
+        "name": "Berk Stonetooth",
+        "race": "Dwarf",
+        "class": "Druid",
+        "level": "20",
+        "season": "",
+        "tag": ""
+    },
+    "24426": {
+        "name": "Biddlepop",
+        "race": "Forest Gnome",
+        "class": "Fighter",
+        "level": "16",
+        "season": "",
+        "tag": ""
+    },
+    "24427": {
+        "name": "Boriv Vargoba",
+        "race": "Half elf",
+        "class": "Cleric",
+        "level": "5",
+        "season": "",
+        "tag": ""
+    },
+    "24428": {
+        "name": "Chivory",
+        "race": "Halfling",
+        "class": "Sorcerer",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "24429": {
+        "name": "Denhaven",
+        "race": "Human",
+        "class": "Paladin",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "24430": {
+        "name": "Eddie",
+        "race": "Bugbear",
+        "class": "Barbarian",
+        "level": "7",
+        "season": "",
+        "tag": ""
+    },
+    "24431": {
+        "name": "Igan Helder",
+        "race": "Half-elf",
+        "class": "Bard/Cleric",
+        "level": "16",
+        "season": "",
+        "tag": ""
+    },
+    "24432": {
+        "name": "Irving",
+        "race": "Half-elf",
+        "class": "Cleric (Tempest)",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "24433": {
+        "name": "Mud",
+        "race": "Dwarf",
+        "class": "Ranger",
+        "level": "9",
+        "season": "",
+        "tag": ""
+    },
+    "24434": {
+        "name": "Pepper",
+        "race": "Halfling",
+        "class": "Warlock",
+        "level": "11",
+        "season": "",
+        "tag": ""
+    },
+    "24435": {
+        "name": "Skip",
+        "race": "Human",
+        "class": "Warlock/Paladin",
+        "level": "12",
+        "season": "",
+        "tag": ""
+    },
+    "24436": {
+        "name": "Talen",
+        "race": "Elf",
+        "class": "Wizard",
+        "level": "7",
+        "season": "",
+        "tag": ""
+    },
+    "24437": {
+        "name": "Tusselbraid",
+        "race": "Halfling",
+        "class": "Monk",
+        "level": "12",
+        "season": "",
+        "tag": ""
+    },
+    "24438": {
+        "name": "Valmar",
+        "race": "Elf",
+        "class": "Rogue",
+        "level": "9",
+        "season": "",
+        "tag": ""
+    },
+    "24439": {
+        "name": "Vandalar",
+        "race": "Half-elf",
+        "class": "Sorcerer",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "24441": {
+        "name": "Yertle",
+        "race": "Tortle",
+        "class": "Cleric (Grave)",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "28229": {
+        "name": "Anthalas",
+        "race": "Elf (Shadar Kai)",
+        "class": "Monk",
+        "level": "9",
+        "season": "",
+        "tag": ""
+    },
+    "34454": {
+        "name": "Hoshisabi",
+        "race": "Human",
+        "class": "Wizard",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "34467": {
+        "name": "Faark",
+        "race": "Goblin",
+        "class": "Ranger",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "34475": {
+        "name": "Simon",
+        "race": "Human",
+        "class": "Wizard",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "34476": {
+        "name": "Konstantin",
+        "race": "Human",
+        "class": "",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "34873": {
+        "name": "Calloway",
+        "race": "Halfling",
+        "class": "Rogue",
+        "level": "13",
+        "season": "",
+        "tag": ""
+    },
+    "34878": {
+        "name": "Gork",
+        "race": "Half-Orc",
+        "class": "Barbarian",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "35364": {
+        "name": "Simon \"Father\" Allen",
+        "race": "Human",
+        "class": "Cleric (Order)",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "35437": {
+        "name": "Unnamed 1",
+        "race": "",
+        "class": "",
+        "level": "9",
+        "season": "",
+        "tag": ""
+    },
+    "35438": {
+        "name": "Unnamed 2",
+        "race": "",
+        "class": "",
+        "level": "10",
+        "season": "",
+        "tag": ""
+    },
+    "35439": {
+        "name": "Curry",
+        "race": "Halfling (Ghostwise)",
+        "class": "Druid (Moon)",
+        "level": "5",
+        "season": "9",
+        "tag": ""
+    },
+    "35447": {
+        "name": "Unnamed Wizard 1",
+        "race": "",
+        "class": "Wizard",
+        "level": "7",
+        "season": "",
+        "tag": ""
+    },
+    "35448": {
+        "name": "Unnamed 4",
+        "race": "",
+        "class": "",
+        "level": "11",
+        "season": "",
+        "tag": ""
+    },
+    "35483": {
+        "name": "Unnamed 5",
+        "race": "",
+        "class": "",
+        "level": "11",
+        "season": "",
+        "tag": ""
+    },
+    "35486": {
+        "name": "Unnamed 6",
+        "race": "",
+        "class": "",
+        "level": "11",
+        "season": "",
+        "tag": ""
+    },
+    "35491": {
+        "name": "Unknown Wizard 2",
+        "race": "",
+        "class": "",
+        "level": "9",
+        "season": "",
+        "tag": ""
+    },
+    "35493": {
+        "name": "Unknown Wizard 3",
+        "race": "",
+        "class": "",
+        "level": "8",
+        "season": "",
+        "tag": ""
+    },
+    "35496": {
+        "name": "Unknown Fighter",
+        "race": "",
+        "class": "",
+        "level": "5",
+        "season": "",
+        "tag": ""
+    },
+    "36612": {
+        "name": "Cadwell",
+        "race": "Half-elf",
+        "class": "Warlock",
+        "level": "14",
+        "season": "",
+        "tag": ""
+    },
+    "41045": {
+        "name": "Doooom",
+        "race": "Kenku",
+        "class": "Cleric",
+        "level": "6",
+        "season": "",
+        "tag": ""
+    },
+    "41681": {
+        "name": "Blip",
+        "race": "Kobold",
+        "class": "",
+        "level": "3",
+        "season": "",
+        "tag": ""
+    },
+    "58096": {
+        "name": "Malvius",
+        "race": "Tiefling",
+        "class": "Rogue",
+        "level": "6",
+        "season": "",
+        "tag": ""
+    },
+    "60703": {
+        "name": "Unnamed character Xyz",
+        "race": "",
+        "class": "",
+        "level": "7",
+        "season": "",
+        "tag": ""
+    },
+    "61243": {
+        "name": "Nulur Smeltfall",
+        "race": "Dwarf",
+        "class": "Cleric",
+        "level": "5",
+        "season": "",
+        "tag": ""
+    },
+    "64917": {
+        "name": "Gerp",
+        "race": "Rock Gnome",
+        "class": "Wizard",
+        "level": "5",
+        "season": "11",
+        "tag": ""
+    },
+    "74419": {
+        "name": "Grunt",
+        "race": "Half-orc",
+        "class": "Barbarian 2",
+        "level": "2",
+        "season": "9",
+        "tag": ""
+    },
+    "80884": {
+        "name": "Undocumented \"Doc\"",
+        "race": "Warforged",
+        "class": "Artificer",
+        "level": "2",
+        "season": "Eberron Oracle of War",
+        "tag": ""
+    },
+    "81815": {
+        "name": "Lieven Fireforge",
+        "race": "",
+        "class": "",
+        "level": "7",
+        "season": "Spelljammer",
+        "tag": ""
+    },
+    "89423": {
+        "name": "Felix",
+        "race": "Human",
+        "class": "Bard",
+        "level": "5",
+        "season": "11",
+        "tag": ""
+    },
+    "89875": {
+        "name": "Verne",
+        "race": "Tortle",
+        "class": "Warlock",
+        "level": "4",
+        "season": "Season 11",
+        "tag": ""
+    },
+    "90333": {
+        "name": "Franjean",
+        "race": "Fairy",
+        "class": "Barbarian 3",
+        "level": "10",
+        "season": "11",
+        "tag": ""
+    },
+    "90751": {
+        "name": "Burgess",
+        "race": "",
+        "class": "",
+        "level": "10",
+        "season": "Season 11",
+        "tag": ""
+    },
+    "92865": {
+        "name": "Cashay",
+        "race": "Changeling",
+        "class": "1",
+        "level": "2",
+        "season": "11",
+        "tag": ""
+    },
+    "102609": {
+        "name": "Scribinator-3000",
+        "race": "autognome",
+        "class": "Wizard-1",
+        "level": "15",
+        "season": "12",
+        "tag": ""
+    },
+    "103414": {
+        "name": "Dral",
+        "race": "Plasmoid",
+        "class": "Rogue 5",
+        "level": "7",
+        "season": "Spelljammer",
+        "tag": ""
+    },
+    "106987": {
+        "name": "Heinlein",
+        "race": "Thri-Kreen",
+        "class": "Ranger 1",
+        "level": "3",
+        "season": "SJ",
+        "tag": ""
+    },
+    "107352": {
+        "name": "Sterg",
+        "race": "Dwarf",
+        "class": "Druid",
+        "level": "4",
+        "season": "SJ",
+        "tag": ""
+    },
+    "108120": {
+        "name": "Moth",
+        "race": "Faerie",
+        "class": "Warlock 1",
+        "level": "2",
+        "season": "Planescape",
+        "tag": ""
+    },
+    "108599": {
+        "name": "Sabi",
+        "race": "human (variant)",
+        "class": "monk",
+        "level": "2",
+        "season": "Forgotten Realms",
+        "tag": ""
+    },
+    "109025": {
+        "name": "Valerian",
+        "race": "Halfling (ghostwise)",
+        "class": "Cleric",
+        "level": "4",
+        "season": "Planescape",
+        "tag": ""
+    },
+    "109550": {
+        "name": "Porthos",
+        "race": "human (variant)",
+        "class": "Fighter",
+        "level": "4",
+        "season": "Planescape",
+        "tag": ""
+    },
+    "139772": {
+        "name": "\"Bob\"",
+        "race": "Orc",
+        "class": "Warlock",
+        "level": "12",
+        "season": "2024",
+        "tag": ""
+    },
+    "204221": {
+        "name": "Danir Glitterscale",
+        "race": "Dragonborn",
+        "class": "Paladin",
+        "level": "4",
+        "season": "",
+        "tag": ""
+    },
+    "221909": {
+        "name": "Logos",
+        "race": "Elf",
+        "class": "Wizard",
+        "level": "2",
+        "season": "Legends of Greyhawk",
+        "tag": "log"
+    }
+}

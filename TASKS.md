@@ -20,12 +20,13 @@ Checked items are completed. Unchecked are pending.
 - [x] Proper StatusBar docked at the bottom; menu with File/Options/Help
 - [x] Options → Delay… dialog to configure/persist network delay
 - [x] "Remember credentials" checkbox, enabled when secure storage available; loads/saves via credential store
-- [ ] **UI Cleanup & Standardization** — *BLOCKING PREREQUISITE (do before features in sections 4–6)*
-  - [ ] Audit and standardize all buttons (sizing, padding, font, colors) per Standard WPF best practices
-  - [ ] Standardize form layout (consistent spacing, alignment, input field widths)
-  - [ ] Ensure proper tab order and keyboard navigation across all controls
-  - [ ] Apply consistent styling (brushes, fonts, themes) to match WPF conventions
-  - [ ] Add visual feedback for focused/disabled states
+- [x] **UI Cleanup & Standardization** — *BLOCKING PREREQUISITE (do before features in sections 4–6)*
+  - [x] Audit and standardize all buttons (sizing, padding, font, colors) per Standard WPF best practices
+  - [x] Standardize form layout (consistent spacing, alignment, input field widths)
+  - [x] Ensure proper tab order and keyboard navigation across all controls
+  - [x] Apply consistent styling (brushes, fonts, themes) to match WPF conventions
+  - [x] Add visual feedback for focused/disabled states
+- [ ] **Verify UI cleanup** — run the built app on Windows; confirm layout, spacing, Alt+mnemonics, tab order, focus and disabled visuals, and the Options dialog; note any theme issues (e.g. light vs dark).
 - [ ] Non-blocking runs (async with UI responsiveness; disable/enable inputs for all long tasks) — *ESSENTIAL FOR MVP; implement alongside Section 4 features*
 - [ ] Progress bar + Cancel button during long-running operations
 - [ ] Error surface improvements (step-specific errors; link to logs)
