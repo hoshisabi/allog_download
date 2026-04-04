@@ -1,15 +1,15 @@
 <Window x:Class="Adventure_League_Log_Downloader.DataLocationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Data location" Height="220" Width="520" MinWidth="440"
+        Title="Data location" Width="520" MinWidth="440" MinHeight="260"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" ShowInTaskbar="False">
-    <Grid Margin="16,14,16,12">
+    <Grid Margin="16,14,16,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -50,12 +50,12 @@
                    Margin="0,10,0,0"
                    TextWrapping="Wrap"
                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                   Text="The app saves your character list here. You can change this if you use multiple accounts or backups."/>
+                   Text="The app saves your character list here. Leave folder blank to use the default app data folder. You can change this if you use multiple accounts or backups."/>
 
-        <StackPanel Grid.Row="4"
+        <StackPanel Grid.Row="3"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    Margin="0,14,0,0"
+                    Margin="0,16,0,0"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button Margin="0,0,10,0"

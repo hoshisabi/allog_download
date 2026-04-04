@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using Adventure_League_Log_Downloader.Services;
 
 namespace Adventure_League_Log_Downloader;
 
@@ -35,13 +36,10 @@ public partial class DataLocationDialog : Window
     private void OnOkClick(object sender, RoutedEventArgs e)
     {
         var folder = FolderTextBox.Text?.Trim() ?? string.Empty;
-        var fileName = FileNameTextBox.Text?.Trim() ?? string.Empty;
-
         if (string.IsNullOrWhiteSpace(folder))
-        {
-            System.Windows.MessageBox.Show(this, "Folder is required.", "Data location", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+            folder = UserSettings.DefaultDataFolder;
+
+        var fileName = FileNameTextBox.Text?.Trim() ?? string.Empty;
 
         try
         {
