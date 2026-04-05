@@ -1,0 +1,62 @@
+# On push of a semver-style tag (v*.*.*), publish WPF win-x64 builds and attach ZIPs to that tag's GitHub Release.
+# Creates the release if it does not exist; enables GitHub-generated release notes.
+
+name: WPF release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  DOTNET_VERSION: "9.0.x"
+  SLN_PATH: Adventure League Log Downloader.sln
+  CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
+  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64
+  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64-selfcontained
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ env.SLN_PATH }}"
+
+      - name: Publish (framework-dependent)
+        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=FolderProfile --no-restore
+
+      - name: Publish (self-contained)
+        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=SelfContainedProfile --no-restore
+
+      - name: Zip publish outputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = '${{ github.ref_name }}'
+          $ws = '${{ github.workspace }}'
+          $fw = Join-Path $ws $env:PUBLISH_OUT_FRAMEWORK
+          $sc = Join-Path $ws $env:PUBLISH_OUT_SELFCONTAINED
+          $zipFw = Join-Path $ws "AdventurersLeagueLogDownloader-$tag-win-x64-framework.zip"
+          $zipSc = Join-Path $ws "AdventurersLeagueLogDownloader-$tag-win-x64-selfcontained.zip"
+          Compress-Archive -Path (Join-Path $fw '*') -DestinationPath $zipFw -Force
+          Compress-Archive -Path (Join-Path $sc '*') -DestinationPath $zipSc -Force
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            AdventurersLeagueLogDownloader-${{ github.ref_name }}-win-x64-framework.zip
+            AdventurersLeagueLogDownloader-${{ github.ref_name }}-win-x64-selfcontained.zip
