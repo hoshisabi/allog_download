@@ -1,0 +1,80 @@
+<Window x:Class="Adventure_League_Log_Downloader.AdditionalDataWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Additional site data" Height="640" Width="720" MinWidth="560" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel LastChildFill="True">
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem HorizontalAlignment="Left">
+                <TextBlock x:Name="StatusText" Text="Ready"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="16,14,16,12">
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,14"
+                           Text="Optional account data from AdventurersLeagueLog.com: saved locations, saved DM names, and campaigns (including campaign log pages). Saved next to your other files in the data folder."/>
+
+                <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="Locations"/>
+                <DataGrid x:Name="LocationsGrid"
+                          Height="120"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button x:Name="DownloadLocationsButton"
+                        Margin="0,8,0,16"
+                        HorizontalAlignment="Left"
+                        Click="OnDownloadLocationsClick"
+                        Content="Download _locations"/>
+
+                <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="Player DMs (saved DM profiles)"/>
+                <DataGrid x:Name="PlayerDmsGrid"
+                          Height="120"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
+                        <DataGridTextColumn Header="DCI" Binding="{Binding Dci}" Width="*"/>
+                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button x:Name="DownloadPlayerDmsButton"
+                        Margin="0,8,0,16"
+                        HorizontalAlignment="Left"
+                        Click="OnDownloadPlayerDmsClick"
+                        Content="Download player _DMs"/>
+
+                <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="Campaigns (list + log entries)"/>
+                <DataGrid x:Name="CampaignsGrid"
+                          Height="140"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="72"/>
+                        <DataGridTextColumn Header="Campaign" Binding="{Binding CampaignName}" Width="2*"/>
+                        <DataGridTextColumn Header="Id" Binding="{Binding CampaignId}" Width="72"/>
+                        <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button x:Name="DownloadCampaignsButton"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Left"
+                        Click="OnDownloadCampaignsClick"
+                        Content="Download _campaigns"/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

@@ -1,4 +1,6 @@
-﻿namespace Adventure_League_Log_Downloader.Services;
+﻿using System.Text.Json.Serialization;
+
+namespace Adventure_League_Log_Downloader.Services;
 
 /// <summary>
 /// Represents a single character entry as scraped from the Adventurers League character list.
@@ -18,4 +20,10 @@ public sealed class CharacterRecord
     /// Latest <c>date_played</c> from the character CSV session log (set after CSV download / when loading from CSV on disk).
     /// </summary>
     public string? LastSessionPlayed { get; set; }
+
+    /// <summary>
+    /// UI-only: per-character CSV is present on disk next to the characters JSON (or legacy csv subfolder).
+    /// </summary>
+    [JsonIgnore]
+    public bool HasLocalCsv { get; set; }
 }

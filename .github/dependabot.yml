@@ -1,0 +1,18 @@
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Python (pyproject.toml / uv) is intentionally omitted: requires-python >=3.15 is ahead of
+# Dependabot's resolver in practice, which produces generic updater errors. Re-enable a pip
+# (or uv) entry when the project aligns with a Python version Dependabot supports, or after
+# the legacy src/ tooling is removed.
+
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

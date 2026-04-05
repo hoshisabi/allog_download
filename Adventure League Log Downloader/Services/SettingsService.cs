@@ -2,13 +2,14 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Adventure_League_Log_Downloader.Services;
 
 public interface ISettingsService
 {
-    Task<UserSettings> LoadAsync();
+    Task<UserSettings> LoadAsync(CancellationToken cancellationToken = default);
     Task SaveAsync(UserSettings settings);
     string SettingsPath { get; }
 }
@@ -42,16 +43,24 @@ public sealed class SettingsService : ISettingsService
 
     public string SettingsPath { get; }
 
-    public async Task<UserSettings> LoadAsync()
+    public async Task<UserSettings> LoadAsync(CancellationToken ct = default)
     {
         try
         {
             if (!File.Exists(SettingsPath))
                 return UserSettings.CreateDefaults();
 
-            await using var fs = File.OpenRead(SettingsPath);
-            var loaded = await JsonSerializer.DeserializeAsync<UserSettings>(fs, _jsonOptions);
-            return loaded ?? UserSettings.CreateDefaults();
+            var text = await File.ReadAllTextAsync(SettingsPath, ct);
+            using var doc = JsonDocument.Parse(text);
+            var loaded = JsonSerializer.Deserialize<UserSettings>(text, _jsonOptions) ?? UserSettings.CreateDefaults();
+
+            // Older settings files omit these keys; default is "only download missing" for both flows.
+            if (!doc.RootElement.TryGetProperty("downloadOnlyMissingCharacterCsvs", out _))
+                loaded.DownloadOnlyMissingCharacterCsvs = true;
+            if (!doc.RootElement.TryGetProperty("downloadOnlyMissingDmSessionDetails", out _))
+                loaded.DownloadOnlyMissingDmSessionDetails = true;
+
+            return loaded;
         }
         catch
         {
