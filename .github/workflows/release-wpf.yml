@@ -7,6 +7,12 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and attach (e.g. v0.1.0); must exist on the remote"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -22,9 +28,13 @@ env:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', github.event.inputs.tag) || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -44,7 +54,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $tag = '${{ github.ref_name }}'
+          $tag = $env:RELEASE_TAG
           $ws = '${{ github.workspace }}'
           $fw = Join-Path $ws $env:PUBLISH_OUT_FRAMEWORK
           $sc = Join-Path $ws $env:PUBLISH_OUT_SELFCONTAINED
@@ -56,7 +66,8 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
           files: |
-            AdventurersLeagueLogDownloader-${{ github.ref_name }}-win-x64-framework.zip
-            AdventurersLeagueLogDownloader-${{ github.ref_name }}-win-x64-selfcontained.zip
+            AdventurersLeagueLogDownloader-${{ env.RELEASE_TAG }}-win-x64-framework.zip
+            AdventurersLeagueLogDownloader-${{ env.RELEASE_TAG }}-win-x64-selfcontained.zip
