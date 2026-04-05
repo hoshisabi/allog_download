@@ -108,16 +108,25 @@ A modern WPF application targeting .NET 9.0 that ports the original Python funct
 
 ### Installation & Distribution
 
-#### Sharing with Friends
-To share the application with someone else:
-1.  **Locate the Distributable:** Go to the `dist` folder in the project root.
-2.  **Send the ZIP:** Share `Adventure_League_Log_Downloader_v1.0.0.zip` with them.
-3.  **Recipient Requirements:**
-    *   They must be running **Windows (x64)**.
-    *   They need the **.NET 9 Desktop Runtime** installed. They can download it from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/9.0).
-4.  **How to Run:**
-    *   Extract the ZIP file.
-    *   Run `Adventure League Log Downloader.exe`.
+#### From GitHub Releases (recommended)
+
+Official builds are published on **[Releases](https://github.com/hoshisabi/allog_download/releases)** (for example **[v0.1.0](https://github.com/hoshisabi/allog_download/releases/tag/v0.1.0)**). Here is what to do on that page:
+
+1. **Pick a download** under *Assets* (ignore “Source code” unless you are a developer):
+   - **`AdventurersLeagueLogDownloader-v0.1.0-win-x64-selfcontained.zip`** (name includes the version tag) — **larger file, easiest choice.** Includes the .NET runtime. Use this if you are not sure.
+   - **`AdventurersLeagueLogDownloader-v0.1.0-win-x64-framework.zip`** — **smaller file.** You must install the **[.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0)** for Windows x64 first, then use this build.
+
+2. **Requirements:** **Windows 64-bit** only. The app does not run on macOS, Linux, or 32-bit Windows.
+
+3. **Install:** Download the ZIP, extract it to a folder you keep (for example `Documents\AllogDownloader`), and double-click **`Adventure League Log Downloader.exe`**.
+
+4. **First run:** Sign in with your AdventurersLeagueLog.com account when prompted, choose a **data folder** under **Options → Data location**, then use the menus to refresh your character list, download CSVs, or open the extra windows for DM sessions and other site data.
+
+Newer versions appear on the same Releases page; the **[Latest release](https://github.com/hoshisabi/allog_download/releases/latest)** link always points to the newest build with the same two ZIP choices (the version in the file names matches the tag).
+
+#### Sharing a copy without GitHub
+
+If you already have a published ZIP from Releases or from `dotnet publish`, zip the folder and share it. Recipients still need **Windows x64**; match the **self-contained** vs **framework** requirements above.
 
 #### Building and Publishing
 To create a fresh single-file executable for distribution:
