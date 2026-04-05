@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Adventure_League_Log_Downloader"
         mc:Ignorable="d"
-        Title="Adventurers League Log Downloader" Height="520" Width="820" MinWidth="700" MinHeight="400">
+        Title="Adventurers League Log Downloader" Height="560" Width="860" MinWidth="720" MinHeight="420">
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top" KeyboardNavigation.TabNavigation="Cycle">
             <MenuItem Header="_File">
@@ -58,7 +58,7 @@
                            Grid.Row="0"
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
-                           Text="Characters from your last download will appear here. Use Download to refresh from the site."/>
+                           Text="Characters from your last download appear here. Download refreshes the list from the site; with one or more rows selected, Download fetches CSVs for those characters (Ctrl/Shift-click)."/>
                 <DataGrid x:Name="CharactersDataGrid"
                           Grid.Row="1"
                           AutoGenerateColumns="False"
@@ -66,12 +66,13 @@
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
                           CanUserResizeRows="False"
-                          SelectionMode="Single"
+                          SelectionMode="Extended"
                           HeadersVisibility="Column"
                           GridLinesVisibility="Horizontal"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Auto"
                           TabIndex="0"
+                          Sorting="CharactersDataGrid_OnSorting"
                           AutomationProperties.Name="Character preview">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" MinWidth="100"/>
@@ -80,23 +81,64 @@
                         <DataGridTextColumn Header="Race" Binding="{Binding Race}" Width="*" MinWidth="72"/>
                         <DataGridTextColumn Header="Season" Binding="{Binding Season}" Width="64"/>
                         <DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="64"/>
+                        <DataGridCheckBoxColumn Header="CSV"
+                                                Binding="{Binding HasLocalCsv}"
+                                                IsReadOnly="True"
+                                                Width="48"/>
                         <DataGridTextColumn Header="Last session" Binding="{Binding LastSessionPlayed}" Width="110" MinWidth="96"/>
                         <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="80"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
 
-            <!-- Buttons: Download is default action from the form -->
-            <StackPanel Grid.Row="2"
-                        Margin="{StaticResource ActionBarMargin}"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right">
-                <Button x:Name="DownloadButton"
-                        TabIndex="1"
-                        IsDefault="True"
-                        Click="OnDownloadClick"
-                        Content="_Download"/>
-            </StackPanel>
+            <Grid Grid.Row="2" Margin="{StaticResource ActionBarMargin}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Margin="0,0,12,0">
+                    <CheckBox x:Name="SkipCharacterCsvsCheckBox"
+                              Margin="0,0,0,6"
+                              TabIndex="1"
+                              Content="List _only (refresh character list; skip CSV downloads)"
+                              Checked="OnSkipCharacterCsvsChanged"
+                              Unchecked="OnSkipCharacterCsvsChanged"/>
+                    <CheckBox x:Name="OnlyMissingCharacterCsvsCheckBox"
+                              TabIndex="2"
+                              Content="When downloading CSVs, only fetch when the file is _missing"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button x:Name="OpenAdditionalDataButton"
+                            Margin="0,0,8,0"
+                            TabIndex="3"
+                            Click="OnAdditionalDataWindowClick"
+                            Content="_More data…"/>
+                    <Button x:Name="OpenDmSessionsButton"
+                            Margin="0,0,8,0"
+                            TabIndex="4"
+                            Click="OnDmSessionWindowClick"
+                            Content="_DM Sessions…"/>
+                    <Button x:Name="ClearCharacterSelectionButton"
+                            Margin="0,0,8,0"
+                            TabIndex="5"
+                            Click="OnClearCharacterSelectionClick"
+                            Content="Clear _selection"/>
+                    <Button x:Name="DownloadButton"
+                            TabIndex="6"
+                            IsDefault="True"
+                            Click="OnDownloadClick"
+                            Content="_Download">
+                        <Button.ToolTip>
+                            <TextBlock TextWrapping="Wrap" MaxWidth="280"
+                                       Text="No selection: download character list from the site (and CSVs per your options). With rows selected: download CSV only for the selected characters."/>
+                        </Button.ToolTip>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>

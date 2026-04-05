@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Adventure_League_Log_Downloader.Services;
@@ -42,5 +43,14 @@ public static class CharacterCsvLocator
             return legacyCsvSubfolder;
 
         return null;
+    }
+
+    public static bool LocalCsvExists(string charactersJsonPath, string characterId) =>
+        TryFindCharacterCsvFile(charactersJsonPath, characterId) != null;
+
+    public static void RefreshLocalCsvFlags(string charactersJsonPath, IEnumerable<CharacterRecord> characters)
+    {
+        foreach (var c in characters)
+            c.HasLocalCsv = LocalCsvExists(charactersJsonPath, c.Id);
     }
 }

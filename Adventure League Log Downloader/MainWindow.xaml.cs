@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using Adventure_League_Log_Downloader.Services;
 
 namespace Adventure_League_Log_Downloader;
@@ -22,6 +27,9 @@ public partial class MainWindow : Window
     private string _accountPassword = string.Empty;
     private bool _rememberCredentials;
 
+    private DmSessionWindow? _dmSessionWindow;
+    private AdditionalDataWindow? _additionalDataWindow;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -38,6 +46,10 @@ public partial class MainWindow : Window
         StatusText.Text = $"Settings: {_settingsService.SettingsPath}";
 
         RefreshLastWebsiteDownloadDisplay();
+
+        SkipCharacterCsvsCheckBox.IsChecked = _settings.SkipCharacterCsvs;
+        OnlyMissingCharacterCsvsCheckBox.IsChecked = _settings.DownloadOnlyMissingCharacterCsvs;
+        ApplyCharacterCsvOptionEnabledState();
 
         await ReloadPreviewFromSavedFileAsync();
 
@@ -72,6 +84,7 @@ public partial class MainWindow : Window
 
     private async void OnSaveDefaultsClick(object sender, RoutedEventArgs e)
     {
+        CopyCharacterCsvOptionsFromUiToSettings();
         await _settingsService.SaveAsync(_settings);
         StatusText.Text = "Defaults saved.";
     }
@@ -79,6 +92,65 @@ public partial class MainWindow : Window
     private void OnExitClick(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void OnClearCharacterSelectionClick(object sender, RoutedEventArgs e) =>
+        CharactersDataGrid.UnselectAll();
+
+    private void OnAdditionalDataWindowClick(object sender, RoutedEventArgs e)
+    {
+        if (_additionalDataWindow != null && _additionalDataWindow.IsLoaded)
+        {
+            _additionalDataWindow.Activate();
+            return;
+        }
+
+        var folder = _settings.OutputFolder?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            System.Windows.MessageBox.Show(this,
+                "Set a data folder first (Options → Data location).",
+                "More data",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        _additionalDataWindow = new AdditionalDataWindow(
+            _credentialStore, folder,
+            _accountUsername, _accountPassword, _rememberCredentials)
+        {
+            Owner = this
+        };
+        _additionalDataWindow.Show();
+    }
+
+    private void OnDmSessionWindowClick(object sender, RoutedEventArgs e)
+    {
+        if (_dmSessionWindow != null && _dmSessionWindow.IsLoaded)
+        {
+            _dmSessionWindow.Activate();
+            return;
+        }
+
+        var folder = _settings.OutputFolder?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            System.Windows.MessageBox.Show(this,
+                "Set a data folder first (Options → Data location).",
+                "DM Session Downloader",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        _dmSessionWindow = new DmSessionWindow(
+            _credentialStore, _settingsService, folder,
+            _accountUsername, _accountPassword, _rememberCredentials)
+        {
+            Owner = this
+        };
+        _dmSessionWindow.Show();
     }
 
     private void OnAboutClick(object sender, RoutedEventArgs e)
@@ -164,7 +236,32 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Persist latest non-sensitive settings
+        var selectedCharacters = CharactersDataGrid.SelectedItems
+            .OfType<CharacterRecord>()
+            .DistinctBy(c => c.Id)
+            .ToList();
+        if (selectedCharacters.Count > 0)
+        {
+            if (!EnsureAccountCredentials())
+            {
+                StatusText.Text = "Ready";
+                return;
+            }
+
+            DownloadButton.IsEnabled = false;
+            try
+            {
+                await DownloadSelectedCharacterCsvsAsync(selectedCharacters, outputPath);
+            }
+            finally
+            {
+                DownloadButton.IsEnabled = true;
+            }
+
+            return;
+        }
+
+        CopyCharacterCsvOptionsFromUiToSettings();
         await _settingsService.SaveAsync(_settings);
 
         if (!EnsureAccountCredentials())
@@ -192,13 +289,22 @@ public partial class MainWindow : Window
 
             var sorted = results.Values.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
             var dataDir = CharacterCsvDownloader.GetCharacterDataDirectory(outputPath);
-            var ids = sorted.Select(c => c.Id).ToList();
+            var skipCsvs = SkipCharacterCsvsCheckBox.IsChecked == true;
+            var onlyMissing = !skipCsvs && OnlyMissingCharacterCsvsCheckBox.IsChecked == true;
+            List<string> idsForCsv;
+            if (skipCsvs)
+                idsForCsv = [];
+            else if (onlyMissing)
+                idsForCsv = sorted.Where(c => !CharacterCsvLocator.LocalCsvExists(outputPath, c.Id)).Select(c => c.Id).ToList();
+            else
+                idsForCsv = sorted.Select(c => c.Id).ToList();
+
             var csvFailed = 0;
-            if (ids.Count > 0)
+            if (idsForCsv.Count > 0)
             {
                 StatusText.Text = "Downloading CSV files…";
                 var csvDownloader = new CharacterCsvDownloader(auth);
-                csvFailed = await csvDownloader.DownloadAllAsync(ids, dataDir, _settings.DelaySeconds, progress, sorted);
+                csvFailed = await csvDownloader.DownloadAllAsync(idsForCsv, dataDir, _settings.DelaySeconds, progress, sorted);
             }
 
             var previousById = await CharacterJsonFile.TryLoadDictionaryAsync(outputPath);
@@ -210,6 +316,8 @@ public partial class MainWindow : Window
                 if (previousById != null && previousById.TryGetValue(c.Id, out var prev) && !string.IsNullOrWhiteSpace(prev.LastSessionPlayed))
                     c.LastSessionPlayed = prev.LastSessionPlayed;
             }
+
+            CharacterCsvLocator.RefreshLocalCsvFlags(outputPath, sorted);
 
             progress.Report(new CharacterScrapeReport
             {
@@ -227,12 +335,16 @@ public partial class MainWindow : Window
             await _settingsService.SaveAsync(_settings);
             RefreshLastWebsiteDownloadDisplay();
 
-            var csvOk = ids.Count - csvFailed;
-            var csvDetail = ids.Count == 0
-                ? "No characters to download CSVs for."
-                : csvFailed == 0
-                    ? $"Downloaded {csvOk} character CSV file(s) next to your character list."
-                    : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). CSVs are next to your character list.";
+            var csvOk = idsForCsv.Count - csvFailed;
+            var csvDetail = skipCsvs
+                ? "CSV downloads skipped (list only)."
+                : idsForCsv.Count == 0
+                    ? onlyMissing
+                        ? "All character CSV files were already present; no CSV downloads."
+                        : "No characters to download CSVs for."
+                    : csvFailed == 0
+                        ? $"Downloaded {csvOk} character CSV file(s) next to your character list."
+                        : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). CSVs are next to your character list.";
 
             progress.Report(new CharacterScrapeReport
             {
@@ -243,8 +355,8 @@ public partial class MainWindow : Window
             });
 
             StatusText.Text = "Done";
-            var successBody = ids.Count == 0
-                ? $"Character list saved to:\n{outputPath}"
+            var successBody = skipCsvs || idsForCsv.Count == 0
+                ? $"Character list saved to:\n{outputPath}\n\n{csvDetail}"
                 : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({csvOk} ok{(csvFailed > 0 ? $", {csvFailed} failed" : "")}):\n{dataDir}";
             System.Windows.MessageBox.Show(this, successBody, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -381,6 +493,9 @@ public partial class MainWindow : Window
             _characterPreview.Add(c);
         }
 
+        CharacterCsvLocator.RefreshLocalCsvFlags(path, _characterPreview);
+
+        ClearDataGridSortState();
         CharactersDataGrid.Items.Refresh();
 
         CharactersPreviewSummary.Text =
@@ -438,5 +553,99 @@ public partial class MainWindow : Window
 
         // Ensure "Last session" and other bound fields refresh when records are mutated in place.
         CharactersDataGrid.Items.Refresh();
+    }
+
+    private void OnSkipCharacterCsvsChanged(object sender, RoutedEventArgs e) =>
+        ApplyCharacterCsvOptionEnabledState();
+
+    private void ApplyCharacterCsvOptionEnabledState()
+    {
+        OnlyMissingCharacterCsvsCheckBox.IsEnabled = SkipCharacterCsvsCheckBox.IsChecked != true;
+    }
+
+    private void CopyCharacterCsvOptionsFromUiToSettings()
+    {
+        _settings.SkipCharacterCsvs = SkipCharacterCsvsCheckBox.IsChecked == true;
+        _settings.DownloadOnlyMissingCharacterCsvs = OnlyMissingCharacterCsvsCheckBox.IsChecked == true;
+    }
+
+    private void CharactersDataGrid_OnSorting(object sender, DataGridSortingEventArgs e)
+    {
+        if (CollectionViewSource.GetDefaultView(_characterPreview) is not ListCollectionView view)
+            return;
+
+        if (e.Column.SortMemberPath is not ("Level" or "LastSessionPlayed"))
+        {
+            view.CustomSort = null;
+            return;
+        }
+
+        e.Handled = true;
+
+        var newDir = e.Column.SortDirection != ListSortDirection.Ascending
+            ? ListSortDirection.Ascending
+            : ListSortDirection.Descending;
+        e.Column.SortDirection = newDir;
+
+        view.CustomSort = e.Column.SortMemberPath == "Level"
+            ? new CharacterRecordLevelComparer(newDir)
+            : new CharacterRecordLastSessionComparer(newDir);
+    }
+
+    private void ClearDataGridSortState()
+    {
+        if (CollectionViewSource.GetDefaultView(_characterPreview) is ListCollectionView lcv)
+            lcv.CustomSort = null;
+        foreach (var col in CharactersDataGrid.Columns)
+            col.SortDirection = null;
+    }
+
+    private async Task DownloadSelectedCharacterCsvsAsync(IReadOnlyList<CharacterRecord> selected, string outputPath)
+    {
+        try
+        {
+            var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
+            var downloader = new CharacterCsvDownloader(auth);
+            var dataDir = CharacterCsvDownloader.GetCharacterDataDirectory(outputPath);
+            var delayMs = (int)Math.Round(_settings.DelaySeconds * 1000);
+            var failed = 0;
+            var total = selected.Count;
+
+            for (var i = 0; i < total; i++)
+            {
+                var c = selected[i];
+                StatusText.Text = $"Downloading CSV {i + 1} of {total}: {c.Name}…";
+
+                var ok = await downloader.DownloadOneAsync(c.Id, dataDir);
+                if (!ok)
+                {
+                    failed++;
+                    continue;
+                }
+
+                CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, outputPath);
+
+                if (delayMs > 0 && i < total - 1)
+                    await Task.Delay(delayMs);
+            }
+
+            CharacterCsvLocator.RefreshLocalCsvFlags(outputPath, _characterPreview);
+            await CharacterJsonFile.SaveAsync(outputPath, _characterPreview.ToDictionary(x => x.Id, x => x));
+
+            CharactersDataGrid.Items.Refresh();
+            StatusText.Text = "Done";
+
+            var okCount = total - failed;
+            var body = failed == 0
+                ? $"Downloaded CSV for {okCount} character(s) into:\n{dataDir}"
+                : $"Downloaded {okCount} CSV file(s); {failed} failed (check status / connection).\n\nFolder:\n{dataDir}";
+            System.Windows.MessageBox.Show(this, body, "Download", MessageBoxButton.OK,
+                failed == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Error";
+            System.Windows.MessageBox.Show(this, ex.Message, "Download", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

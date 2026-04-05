@@ -50,8 +50,6 @@ public sealed class CharacterCsvDownloader
             ct.ThrowIfCancellationRequested();
 
             var id = characterIdsOrdered[i];
-            var path = Path.Combine(characterDataDirectory, $"character_{id}.csv");
-            var relativeUrl = $"/users/{userId}/characters/{Uri.EscapeDataString(id)}.csv";
 
             progress?.Report(new CharacterScrapeReport
             {
@@ -61,13 +59,9 @@ public sealed class CharacterCsvDownloader
                 Detail = $"Downloading character CSVs: {i + 1} of {total}…"
             });
 
-            using var req = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
-            req.Headers.Accept.Clear();
-            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/csv"));
-            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
-
-            using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
-            if (!resp.IsSuccessStatusCode)
+            var path = Path.Combine(characterDataDirectory, $"character_{id}.csv");
+            var (ok, errCode) = await TryDownloadCsvToPathAsync(client, userId, id, path, ct);
+            if (!ok)
             {
                 failed++;
                 progress?.Report(new CharacterScrapeReport
@@ -75,13 +69,8 @@ public sealed class CharacterCsvDownloader
                     Phase = CharacterScrapePhase.DownloadingCsvs,
                     CharacterCount = charactersForUiSnapshot.Count,
                     Characters = charactersForUiSnapshot,
-                    Detail = $"CSV for character {id}: HTTP {(int)resp.StatusCode} (skipped)."
+                    Detail = $"CSV for character {id}: HTTP {errCode} (skipped)."
                 });
-            }
-            else
-            {
-                await using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                await resp.Content.CopyToAsync(fs, ct);
             }
 
             if (delaySeconds > 0 && i < characterIdsOrdered.Count - 1)
@@ -92,6 +81,49 @@ public sealed class CharacterCsvDownloader
         }
 
         return failed;
+    }
+
+    /// <summary>
+    /// Downloads one character CSV into the standard filename under <paramref name="characterDataDirectory"/>.
+    /// </summary>
+    public async Task<bool> DownloadOneAsync(
+        string characterId,
+        string characterDataDirectory,
+        CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(characterId);
+
+        var client = await _auth.GetAuthenticatedClientAsync();
+        var userId = await _auth.GetUserIdAsync();
+        Directory.CreateDirectory(characterDataDirectory);
+        var path = Path.Combine(characterDataDirectory, $"character_{characterId}.csv");
+        var (ok, _) = await TryDownloadCsvToPathAsync(client, userId, characterId, path, ct);
+        return ok;
+    }
+
+    /// <summary>Writes the CSV response body to <paramref name="filePath"/>.</summary>
+    /// <returns><c>(true, 0)</c> on success; otherwise <c>(false, HTTP status)</c>.</returns>
+    private static async Task<(bool Ok, int StatusCode)> TryDownloadCsvToPathAsync(
+        HttpClient client,
+        string userId,
+        string characterId,
+        string filePath,
+        CancellationToken ct)
+    {
+        var relativeUrl = $"/users/{userId}/characters/{Uri.EscapeDataString(characterId)}.csv";
+
+        using var req = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
+        req.Headers.Accept.Clear();
+        req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/csv"));
+        req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+
+        using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (!resp.IsSuccessStatusCode)
+            return (false, (int)resp.StatusCode);
+
+        await using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await resp.Content.CopyToAsync(fs, ct);
+        return (true, 0);
     }
 
     /// <summary>
