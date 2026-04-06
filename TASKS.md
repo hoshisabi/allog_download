@@ -57,7 +57,7 @@ Checked items are completed. Unchecked are pending.
 ---
 
 ## 5) Data: downloading and parsing (port from Python)
-- [ ] **Per-character session log downloads** (detailed pages per character) — *PRIORITY: Do before DM sessions*
+- [ ] **Per-character session log downloads** (detailed pages per character) — *needed for full MSC/Markdown export (gold, downtime, magic items)*
 - [ ] DM session list scraping (`dmsession_list.py` → C#) — *lower priority; can follow after session logs*
 - [ ] CSV ingest parity where Python scripts relied on downloaded CSVs as input
 
@@ -65,19 +65,22 @@ Checked items are completed. Unchecked are pending.
 
 ## 6) Data export formats (port from Python)
 - [x] Characters JSON export
+- [ ] **Moonsea Codex (MSC) export** — *FIRST EXPORT TARGET*
+  - Reference schema: `docs/examples/msc-export-*.json`
+  - **v1 (character list data only):** name, race, classes array (parsed from class string), level, season, faction, campaign — gold/downtime as `0`, items as `[]`
+  - **v2 (after section 5 CSV parsing):** populate gold, downtime, magic items array from session log data
+  - `classes` must be array of `{name, value, subclass}` — parse from class string (e.g. "Warlock 20" or "Fighter 10/Rogue 10")
+  - Stats (`ac`, `hp`, `pp`, `dc`) not tracked by allog — always export as `0`
+  - `sheet` field: carry D&D Beyond URL if available (may not be scrapeable)
+  - Rarity normalization: normalize to consistent format (reference files inconsistent: `very_rare` vs `veryrare`)
+  - `uuid` fields: generate new GUIDs on each export
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
+  - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)
+  - Consider Scriban for templating
 - [ ] Characters Markdown export — per-character files, optional zip
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
 - [ ] DM sessions JSON/CSV export
 - [ ] Per-character session JSON/CSV export
-- [ ] **Moonsea Codex (MSC) export** — *LOWEST PRIORITY (last task before stretch goals)*
-  - Reference schema: `docs/examples/msc-export-*.json`
-  - Convert characters JSON to MSC import format
-  - `gold`/`downtime` should be numbers (default `0`), not null
-  - `classes` must be array of `{name, value, subclass}`
-  - Stats (`ac`, `hp`, `pp`, `dc`) not tracked by allog — export as `0`
-  - `sheet` field can carry a D&D Beyond URL if available
-  - Rarity normalization: defer decision until implementation phase (low priority)
 - [ ] Option: append timestamp to filenames
 
 ---
