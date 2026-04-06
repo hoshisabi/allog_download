@@ -72,7 +72,7 @@ Checked items are completed. Unchecked are pending.
   - Depends on per-character CSVs being downloaded (section 5)
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)
-  - Consider Scriban for templating
+  - Use **Scriban** for templating (`Scriban` NuGet package)
 - [ ] Characters Markdown export — per-character files, optional zip
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
 - [ ] DM sessions JSON/CSV export
