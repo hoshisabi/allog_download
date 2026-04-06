@@ -119,6 +119,14 @@ Checked items are completed. Unchecked are pending.
 
 ---
 
+## 12) Archive cleanup
+When all Python functionality has been ported to C# (sections 5, 6, and 11 fully complete), delete `archive/python/` and this section.
+- [ ] Verify all Python script capabilities are covered in C# (per-character session logs, DM sessions, Markdown export, CSV export, PDF export, MSC export)
+- [ ] Delete `archive/python/`
+- [ ] Remove archive references from README.md and CLAUDE.md
+
+---
+
 ## Legend
 - [x] Completed
 - [ ] Pending
