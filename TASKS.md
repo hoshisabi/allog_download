@@ -65,15 +65,11 @@ Checked items are completed. Unchecked are pending.
 
 ## 6) Data export formats (port from Python)
 - [x] Characters JSON export
-- [ ] **Moonsea Codex (MSC) export** — *FIRST EXPORT TARGET*
-  - Reference schema: `docs/examples/msc-export-*.json`
-  - **v1 (character list data only):** name, race, classes array (parsed from class string), level, season, faction, campaign — gold/downtime as `0`, items as `[]`
-  - **v2 (after section 5 CSV parsing):** populate gold, downtime, magic items array from session log data
-  - `classes` must be array of `{name, value, subclass}` — parse from class string (e.g. "Warlock 20" or "Fighter 10/Rogue 10")
-  - Stats (`ac`, `hp`, `pp`, `dc`) not tracked by allog — always export as `0`
-  - `sheet` field: carry D&D Beyond URL if available (may not be scrapeable)
-  - Rarity normalization: normalize to consistent format (reference files inconsistent: `very_rare` vs `veryrare`)
-  - `uuid` fields: generate new GUIDs on each export
+- [ ] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
+  - The allog CSV format is already what MSC's importer expects — no transformation needed
+  - Per-character: button/menu item opens the character's CSV folder in Explorer + opens the MSC import page in the default browser
+  - User drags the CSV onto the MSC page themselves — no MSC credentials stored in the app
+  - Depends on per-character CSVs being downloaded (section 5)
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)
   - Consider Scriban for templating
