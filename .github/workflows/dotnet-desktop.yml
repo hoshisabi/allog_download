@@ -1,6 +1,6 @@
 # Build and publish the WPF app (win-x64).
 # Artifacts (main / manual only):
-#   - *-framework: needs .NET 9 Windows Desktop Runtime installed.
+#   - *-framework: needs .NET 10 Windows Desktop Runtime installed.
 #   - *-selfcontained: all-in-one single-folder build (larger; no separate runtime install).
 
 name: WPF build
@@ -15,11 +15,11 @@ on:
 env:
   # Use Node 24 for JS-based actions (checkout, setup-dotnet, upload-artifact); Node 20 is deprecated on runners.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  DOTNET_VERSION: "9.0.x"
+  DOTNET_VERSION: "10.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
-  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64
-  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64-selfcontained
+  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64
+  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64-selfcontained
 
 jobs:
   build:

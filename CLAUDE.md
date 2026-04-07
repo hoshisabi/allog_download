@@ -4,7 +4,7 @@
 
 `allog_download` is a tool for downloading and processing data from AdventurersLeagueLog.com (Adventurers League character/session logs).
 
-**Active development target:** The C# WPF App (`Adventure League Log Downloader/`) — a native Windows GUI app built on .NET 9.
+**Active development target:** The C# WPF App (`Adventure League Log Downloader/`) — a native Windows GUI app built on .NET 10.
 
 **Archived:** `archive/python/` contains the original Python scripts that preceded the C# app. They are not maintained and should not be treated as current code.
 
@@ -13,7 +13,7 @@
 ## C# WPF App
 
 ### Tech Stack
-- .NET 9.0-windows, WPF
+- .NET 10.0-windows, WPF
 - NuGet: `HtmlAgilityPack` (HTML parsing), `CredentialManagement` (Windows Credential Manager)
 - IDE: Visual Studio 2022 or JetBrains Rider
 
@@ -22,7 +22,7 @@
 # Debug run — open Adventure League Log Downloader.sln in Visual Studio
 # Single-file release build for distribution:
 dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
-# Output: Adventure League Log Downloader\bin\Release\net9.0-windows\publish\win-x64\
+# Output: Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win-x64\
 ```
 
 ### What's Implemented
@@ -54,6 +54,9 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 - C# WPF app is the primary deliverable for non-programmer users
 - DM session download/export is pending in C#
 - See TASKS.md for the full checklist
+
+## Security / credentials
+- Policy and wording for stored site passwords (obfuscation vs encryption, opt-out, CLI): see **`SECURITY.md`**.
 
 ## Archived Python Code
 The original Python scripts are in `archive/python/` — reference only, not maintained. See `archive/python/README.md`.

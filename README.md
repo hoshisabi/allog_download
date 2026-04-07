@@ -4,7 +4,7 @@ A Windows desktop app for downloading and processing character/session data from
 
 ## Adventure League Log Downloader (C# WPF App)
 
-The primary deliverable. A native Windows GUI app built on .NET 9.
+The primary deliverable. A native Windows GUI app built on .NET 10.
 
 ### Features
 - Native Windows authentication via Credential Manager
@@ -16,11 +16,13 @@ The primary deliverable. A native Windows GUI app built on .NET 9.
 Official builds are published on **[Releases](https://github.com/hoshisabi/allog_download/releases)**. On the release page, under *Assets*:
 
 - **`AdventurersLeagueLogDownloader-vX.X.X-win-x64-selfcontained.zip`** — larger file, includes the .NET runtime. Use this if unsure.
-- **`AdventurersLeagueLogDownloader-vX.X.X-win-x64-framework.zip`** — smaller file. Requires [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0) for Windows x64 installed first.
+- **`AdventurersLeagueLogDownloader-vX.X.X-win-x64-framework.zip`** — smaller file. Requires [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) for Windows x64 installed first.
 
 **Requirements:** Windows 64-bit only.
 
 Extract the ZIP to a folder you keep (e.g. `Documents\AllogDownloader`) and double-click `Adventure League Log Downloader.exe`.
+
+**Credentials:** how stored passwords are handled (including limitations) is documented in [`SECURITY.md`](SECURITY.md).
 
 ### Building
 
@@ -28,11 +30,11 @@ Extract the ZIP to a folder you keep (e.g. `Documents\AllogDownloader`) and doub
 dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 ```
 
-Output: `Adventure League Log Downloader\bin\Release\net9.0-windows\publish\win-x64\`
+Output: `Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win-x64\`
 
 ### Development
 
-Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Rider. Target framework: `.NET 9.0-windows`.
+Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Rider. Target framework: `.NET 10.0-windows`.
 
 ---
 
