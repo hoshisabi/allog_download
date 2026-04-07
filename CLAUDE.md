@@ -32,6 +32,12 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 - Settings persistence to `%AppData%/AllogDownloader/settings.json`
 - Options dialog (configurable network delay)
 - Characters JSON export
+- Per-character CSV download (`character_{id}.csv`) and **File → Export session log workbook (CSV)…** (`session_log_workbook.csv`) — see `docs/examples/spreadsheet-ken-ddal-log.md`
+
+### Spreadsheet-style reference (Ken DDAL Log example)
+
+- **Google Sheet (bookmark):** [Ken DDAL Log](https://docs.google.com/spreadsheets/d/1bqbClFX-MMgIWDKbnEEmmxBvwzO6wYSXm_ig690kojA/edit?usp=sharing)
+- **Doc:** `docs/examples/spreadsheet-ken-ddal-log.md` — column layout, site CSV mapping, workbook export mapping, changelog, and future suggestions
 
 ### What's Pending (see TASKS.md for full checklist)
 - Progress bar and cancellation during long operations

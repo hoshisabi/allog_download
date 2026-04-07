@@ -65,6 +65,7 @@ Checked items are completed. Unchecked are pending.
 
 ## 6) Data export formats (port from Python)
 - [x] Characters JSON export
+- [x] **Session log workbook CSV** — **File → Export session log workbook (CSV)…** → `session_log_workbook.csv` (merged view of downloaded `character_*.csv`). Reference layout: [Ken DDAL Log (Google Sheet)](https://docs.google.com/spreadsheets/d/1bqbClFX-MMgIWDKbnEEmmxBvwzO6wYSXm_ig690kojA/edit?usp=sharing); mapping and future ideas: `docs/examples/spreadsheet-ken-ddal-log.md`
 - [ ] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
   - The allog CSV format is already what MSC's importer expects — no transformation needed
   - Per-character: button/menu item opens the character's CSV folder in Explorer + opens the MSC import page in the default browser

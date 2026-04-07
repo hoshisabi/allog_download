@@ -23,6 +23,29 @@ public static class CharacterLogCsvReader
     };
 
     /// <summary>
+    /// Parses timestamps as they appear in per-character site CSV (<c>date_played</c>, <c>date_dmed</c>, etc.).
+    /// </summary>
+    public static bool TryParseSiteCsvTimestamp(string? text, out DateTime utc)
+    {
+        utc = default;
+        return !string.IsNullOrWhiteSpace(text) && TryParseSessionDate(text.Trim(), out utc);
+    }
+
+    /// <summary>
+    /// Formats a parsed CSV timestamp for flat exports (ISO date in local time, Excel-friendly sorting).
+    /// </summary>
+    public static string FormatSiteDateForWorkbook(DateTime utc)
+    {
+        var local = utc.Kind switch
+        {
+            DateTimeKind.Utc => utc.ToLocalTime(),
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime(),
+            _ => utc
+        };
+        return local.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
     /// Returns the latest <c>date_played</c> from session rows, or null if none could be parsed.
     /// </summary>
     public static DateTime? TryGetLatestSessionDatePlayed(string csvPath)
