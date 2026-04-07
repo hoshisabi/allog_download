@@ -19,11 +19,11 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  DOTNET_VERSION: "9.0.x"
+  DOTNET_VERSION: "10.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
-  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64
-  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net9.0-windows/publish/win-x64-selfcontained
+  PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64
+  PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64-selfcontained
 
 jobs:
   release:

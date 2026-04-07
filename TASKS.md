@@ -7,7 +7,7 @@ Checked items are completed. Unchecked are pending.
 ---
 
 ## 1) Project setup and foundations (C#)
-- [x] Create WPF project targeting `net9.0-windows` and set up namespaces
+- [x] Create WPF project targeting `net10.0-windows` and set up namespaces
 - [x] Add HtmlAgilityPack for HTML parsing
 - [x] Add Windows Credential Manager support via `CredentialManagement`
 - [x] Add settings persistence service saving JSON to `%AppData%/AllogDownloader/settings.json`
@@ -89,6 +89,65 @@ Checked items are completed. Unchecked are pending.
 
 ---
 
+## 7b) Shared Core, console host (CLI + TUI), and WPF *(cross-platform path)*
+
+**Intent:** Keep the Windows **WPF** app as the primary “full GUI” experience. Add a **`net10.0` console** program that ships on **Windows, macOS, and Linux** and shares all site logic with WPF via a **`net10.0` class library**. The console host combines:
+
+- **CLI** — subcommands and flags for scripting, automation, and advanced users; suitable for CI and `cron`; exits non-zero on failure; no prompts when required arguments are supplied.
+- **TUI** — an interactive, full-terminal guided flow (menus, forms, progress) for users who are fine in a terminal but want *discovery* and feedback without memorizing flags. Useful on **Windows** (Windows Terminal, etc.) as well as Unix.
+
+**Target solution layout**
+
+| Project | TFM | Role |
+|--------|-----|------|
+| `Allog.Core` *(name TBD)* | `net10.0` | Auth, scrapers, settings models/paths, file I/O contracts; `IProgress<T>` + `CancellationToken`; **no** WPF/WinForms/Console UI packages |
+| `Adventure League Log Downloader` | `net10.0-windows` | WPF + Windows credential store + folder picker; references Core only for site logic |
+| `Allog.Console` *(name TBD)* | `net10.0` | References Core; hosts **System.CommandLine** (or equivalent) root command with subcommands, e.g. `download`, `auth-test`, … and **`tui`** (or make `tui` the default when no subcommand is given — decide at implementation time) |
+
+**TUI implementation note:** Start with **[Spectre.Console](https://spectreconsole.net/)** — prompts, tables, live progress, and layouts are quick to align with existing WPF flows and behave well across Windows Terminal and Unix terminals. If we later need classic multi-pane terminal UI (separate windows, mouse regions), evaluate **[Terminal.Gui](https://github.com/gui-cs/Terminal.Gui)** as a second phase or for specific screens only.
+
+**Roadmap order (hosts)**  
+1) **Headless CLI** first — cross-platform, scripting, minimal UX surface.  
+2) **TUI** second — same `Allog.Console` binary, interactive mode when Core + CLI patterns are stable.  
+3) **New product features** (including exports, session logs, MSC, Markdown, etc.) can land **mostly in Core** as they are implemented; **WPF can gain those features between TUI and any full GUI rework** so Windows users are not blocked.  
+4) **Full GUI rework** (cross-platform replacement for WPF) **last** — only after Core stabilizes and hosts are proven.
+
+**Credential / config on console (CLI + later TUI)**  
+Priority: **environment variables** and **explicit CLI arguments** for non-interactive use. **Optional persistence:** settings under app data / home (same family as `settings.json`); password stored only as **obfuscation** for convenience — **not** encryption; user copy must say **“obfuscated password,”** never **“encrypted.”** Users who want no local secret leave **“store credentials”** unchecked. See **`SECURITY.md`** for the full decision record, threat model, and WPF vs portable notes. WPF may keep **Windows Credential Manager** for now; **no** Keychain / Secret Service in the first cross-platform wave.
+
+**Exports vs CLI/TUI timing**  
+Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for whatever Core already does well (e.g. auth + character list → JSON). Add **new CLI/TUI commands as export pipelines move into Core** (Markdown, zip, MSC helpers, etc.). Several heavier exports depend on **per-character session data** (sections 5–6 above); sequencing those in Core naturally extends the same façade the CLI and TUI call, with little throwaway work.
+
+**Distribution:** Publish **`Allog.Console`** self-contained per RID (`win-x64`, `osx-arm64`, `osx-x64`, `linux-x64`). WPF publish profile stays **Windows-only**.
+
+### Checklist — phased
+
+**Phase A — Core extraction (no user-visible change on Windows WPF)**
+- [ ] Add `Allog.Core` project; move `Services/*` and non-UI models; ensure zero references to `System.Windows`, WinForms, or Console-specific types in Core
+- [ ] Define small **host-facing façade** (e.g. use-case methods or `IAllogApp` / orchestrator) that WPF, CLI, and TUI call so behavior stays single-sourced
+- [ ] Wire WPF project to reference Core; trim duplicated logic from code-behind incrementally
+- [ ] Windows-only implementations (`ICredentialStore`, etc.) remain in WPF assembly or a `net10.0-windows` companion project referenced only by WPF
+
+**Phase B — Headless CLI**
+- [ ] Add `Allog.Console`; root parser with `--help` and subcommands mirroring **initial** Core capabilities (authenticate, scrape characters, output paths, delay); extend verbs as new Core features ship
+- [ ] Credentials: **env vars** + **flags**; optional persisted settings including **obfuscated** password per **`SECURITY.md`** (documented; restrictive permissions on Unix where applicable)
+- [ ] Document environment variables, config file location, and exit codes for scripting
+- [ ] CI job: build and test Core + Console on Linux (and optionally macOS) so regressions surface early
+
+**Phase C — TUI**
+- [ ] Implement `… tui` (or default interactive mode): main menu mapping to WPF concepts — account, output location, options/delay, run download, open output folder (`Process.Start` / `xdg-open` / `open` by OS)
+- [ ] Shared progress reporting via `IProgress<string>` or structured status DTOs so CLI (optional `--verbose`) and TUI stay aligned
+- [ ] Keyboard-first navigation; respect terminal size; clear error panels
+
+**Phase D — Polish (console)**
+- [ ] Single downloadable per OS for console + version string parity with WPF
+- [ ] README section: when to use WPF vs TUI vs headless CLI; security notes for env and config file
+
+**Phase E — Full GUI rework** *(last)*  
+- [ ] Replace or supplement WPF with a cross-platform desktop UI **after** Core and console hosts are stable; new features should already live in Core where possible
+
+---
+
 ## 8) Packaging and distribution
 - [x] Versioning and build metadata
 - [x] Single-file distribution profile (win-x64)
@@ -99,12 +158,12 @@ Checked items are completed. Unchecked are pending.
 
 ## 9) Documentation
 - [ ] Expand README with setup, usage, screenshots, and troubleshooting
-- [ ] SECURITY.md: credential storage approach and limitations
+- [x] SECURITY.md: credential storage approach and limitations *(initial decisions recorded; update when implementation lands)*
 
 ---
 
 ## 10) Stretch goals / future
-- [ ] Headless CLI mode reusing the same C# services (for automation/scripting)
+- [ ] **Headless CLI + interactive TUI** — detailed checklist under **7b)** (same `Allog.Console` host)
 - [ ] Background sync with scheduled fetches
 - [ ] Bookmarklet or browser extension to scrape site data and bypass Cloudflare blocking
 - [ ] GitHub Actions for periodic automated data updates
