@@ -9,6 +9,9 @@
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top" KeyboardNavigation.TabNavigation="Cycle">
             <MenuItem Header="_File">
+                <MenuItem Header="Export _session log workbook (CSV)…"
+                          Click="OnExportSessionLogWorkbookClick"/>
+                <Separator/>
                 <MenuItem Header="E_xit" Click="OnExitClick"/>
             </MenuItem>
             <MenuItem Header="_Options">

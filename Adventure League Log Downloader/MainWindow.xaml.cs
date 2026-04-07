@@ -90,6 +90,51 @@ public partial class MainWindow : Window
         StatusText.Text = "Defaults saved.";
     }
 
+    private async void OnExportSessionLogWorkbookClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryEnsureOutputPath(out var outputPath, out var msg))
+        {
+            System.Windows.MessageBox.Show(this, msg, "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var chars = _characterPreview.Count > 0
+            ? _characterPreview.ToList()
+            : await CharacterJsonFile.TryLoadSortedAsync(outputPath);
+
+        if (chars is not { Count: > 0 })
+        {
+            System.Windows.MessageBox.Show(this,
+                "No character list loaded. Download your roster first or check Options → Data location.",
+                "Export",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            StatusText.Text = "Exporting session workbook…";
+            var result = await SessionLogWorkbookCsvExporter.ExportAsync(outputPath, chars);
+            StatusText.Text = "Session workbook exported.";
+            var skipNote = result.CharactersSkippedNoCsv > 0
+                ? $"{result.CharactersSkippedNoCsv} character(s) had no local CSV and were skipped.{Environment.NewLine}{Environment.NewLine}"
+                : string.Empty;
+            System.Windows.MessageBox.Show(this,
+                $"Wrote {result.RowCount} row(s) from {result.CharactersUsed} character CSV file(s).{Environment.NewLine}{Environment.NewLine}" +
+                skipNote +
+                result.OutputPath,
+                "Export",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Export failed";
+            System.Windows.MessageBox.Show(this, ex.Message, "Export", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void OnExitClick(object sender, RoutedEventArgs e)
     {
         Close();
