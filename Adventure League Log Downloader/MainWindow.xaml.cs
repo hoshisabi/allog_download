@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using Adventure_League_Log_Downloader.Services;
 
 namespace Adventure_League_Log_Downloader;
@@ -541,6 +542,30 @@ public partial class MainWindow : Window
         _accountPassword = dlg.Password;
         _rememberCredentials = dlg.RememberCredentials;
         return true;
+    }
+
+    private string? TryGetCharactersJsonPath()
+    {
+        var folder = _settings.OutputFolder?.Trim() ?? string.Empty;
+        var fileName = _settings.OutputFileName?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(folder) || string.IsNullOrWhiteSpace(fileName))
+            return null;
+        return Path.Combine(folder, fileName);
+    }
+
+    private void CharactersDataGrid_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left)
+            return;
+        if (CharactersDataGrid.SelectedItem is not CharacterRecord ch)
+            return;
+
+        var jsonPath = TryGetCharactersJsonPath();
+        var dlg = new CharacterDetailWindow(ch, jsonPath)
+        {
+            Owner = this
+        };
+        dlg.ShowDialog();
     }
 
     private bool TryEnsureOutputPath(out string outputPath, out string validationMessage)

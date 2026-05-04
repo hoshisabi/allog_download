@@ -92,7 +92,7 @@
                            Grid.Row="0"
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
-                           Text="Characters from your last download appear here. Download refreshes the list from the site; with one or more rows selected, Download fetches CSVs for those characters (Ctrl/Shift-click)."/>
+                           Text="Characters from your last download appear here. Download refreshes the list from the site; with one or more rows selected, Download fetches CSVs for those characters (Ctrl/Shift-click). Double-click a row for details."/>
                 <DataGrid x:Name="CharactersDataGrid"
                           Grid.Row="1"
                           AutoGenerateColumns="False"
@@ -107,6 +107,7 @@
                           HorizontalScrollBarVisibility="Auto"
                           TabIndex="0"
                           Sorting="CharactersDataGrid_OnSorting"
+                          MouseDoubleClick="CharactersDataGrid_OnMouseDoubleClick"
                           AutomationProperties.Name="Character preview">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" MinWidth="100"/>
