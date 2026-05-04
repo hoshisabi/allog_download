@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 
 namespace Adventure_League_Log_Downloader.Services;
 
@@ -83,7 +80,7 @@ public sealed class AdventurersLeagueAuth : IAdventurersLeagueAuth
             using var resp = await _client.GetAsync(rel);
             if (!resp.IsSuccessStatusCode) continue;
             var html = await resp.Content.ReadAsStringAsync();
-            var id = TryExtractUserIdFromHtml(html);
+            var id = AdventurersLeagueHtmlParsing.TryExtractUserIdFromHtml(html);
             if (!string.IsNullOrEmpty(id))
             {
                 _userId = id;
@@ -106,7 +103,7 @@ public sealed class AdventurersLeagueAuth : IAdventurersLeagueAuth
         if (!loginPageResp.IsSuccessStatusCode)
             throw new InvalidOperationException($"Failed to load login page: {(int)loginPageResp.StatusCode} {loginPageResp.ReasonPhrase}");
         var loginHtml = await loginPageResp.Content.ReadAsStringAsync();
-        var (tokenName, tokenValue) = ExtractCsrf(loginHtml);
+        var (tokenName, tokenValue) = AdventurersLeagueHtmlParsing.ExtractCsrf(loginHtml);
 
         // 2) Post credentials
         var content = new FormUrlEncodedContent(new[]
@@ -128,7 +125,7 @@ public sealed class AdventurersLeagueAuth : IAdventurersLeagueAuth
         if (!home.IsSuccessStatusCode)
             throw new InvalidOperationException("Login verification failed (home not reachable)");
         var homeHtml = await home.Content.ReadAsStringAsync();
-        var id = TryExtractUserIdFromHtml(homeHtml);
+        var id = AdventurersLeagueHtmlParsing.TryExtractUserIdFromHtml(homeHtml);
         _loggedIn = id != null; // consider logged in if we can see user links
         _userId = id;
 
@@ -138,57 +135,4 @@ public sealed class AdventurersLeagueAuth : IAdventurersLeagueAuth
         }
     }
 
-    private static (string name, string? value) ExtractCsrf(string html)
-    {
-        // Try common CSRF patterns found in Rails/ASP.NET
-        var doc = new HtmlAgilityPack.HtmlDocument();
-        doc.LoadHtml(html);
-
-        // input[name=authenticity_token]
-        var input = doc.DocumentNode
-            .SelectNodes("//input[@type='hidden']")
-            ?.FirstOrDefault(n => string.Equals(n.GetAttributeValue("name", string.Empty), "authenticity_token", StringComparison.OrdinalIgnoreCase));
-        if (input != null)
-        {
-            return ("authenticity_token", input.GetAttributeValue("value", string.Empty));
-        }
-
-        // input[name=__RequestVerificationToken]
-        var input2 = doc.DocumentNode
-            .SelectNodes("//input[@type='hidden']")
-            ?.FirstOrDefault(n => string.Equals(n.GetAttributeValue("name", string.Empty), "__RequestVerificationToken", StringComparison.OrdinalIgnoreCase));
-        if (input2 != null)
-        {
-            return ("__RequestVerificationToken", input2.GetAttributeValue("value", string.Empty));
-        }
-
-        // Default to authenticity_token with empty value if not found
-        return ("authenticity_token", string.Empty);
-    }
-
-    private static string? TryExtractUserIdFromHtml(string html)
-    {
-        // find any /users/{id}/... link
-        var rx = new Regex(@"/users/(\d+)/", RegexOptions.IgnoreCase);
-        var match = rx.Match(html);
-        if (match.Success)
-        {
-            return match.Groups[1].Value;
-        }
-
-        // Try parsing DOM for anchors to be robust
-        var doc = new HtmlAgilityPack.HtmlDocument();
-        doc.LoadHtml(html);
-        var anchors = doc.DocumentNode.SelectNodes("//a[@href]");
-        if (anchors != null)
-        {
-            foreach (var a in anchors)
-            {
-                var href = a.GetAttributeValue("href", string.Empty);
-                var m = rx.Match(href);
-                if (m.Success) return m.Groups[1].Value;
-            }
-        }
-        return null;
-    }
 }

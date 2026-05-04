@@ -1,0 +1,57 @@
+<Window x:Class="Adventure_League_Log_Downloader.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About"
+        Height="280" Width="420" MinWidth="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid Margin="16,14,16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   FontWeight="SemiBold"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,8"
+                   Text="Adventurers League Log Downloader"/>
+
+        <TextBlock x:Name="VersionBuildText"
+                   Grid.Row="1"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="2"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,14"
+                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                   Text="Downloads and exports character data from AdventurersLeagueLog.com."/>
+
+        <StackPanel Grid.Row="3" VerticalAlignment="Top">
+            <TextBlock Margin="0,0,0,6">
+                <Hyperlink NavigateUri="https://github.com/hoshisabi/allog_download"
+                           RequestNavigate="OnLinkNavigate">
+                    GitHub repository
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock>
+                <Hyperlink NavigateUri="https://github.com/hoshisabi/allog_download/issues"
+                           RequestNavigate="OnLinkNavigate">
+                    Report an issue
+                </Hyperlink>
+            </TextBlock>
+        </StackPanel>
+
+        <Button Grid.Row="4"
+                HorizontalAlignment="Right"
+                Margin="0,18,0,0"
+                IsDefault="True"
+                IsCancel="True"
+                Click="OnOkClick"
+                Content="_OK"/>
+    </Grid>
+</Window>
