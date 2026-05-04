@@ -1,0 +1,144 @@
+<Window x:Class="Adventure_League_Log_Downloader.CharacterDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="clr-namespace:Adventure_League_Log_Downloader.Services"
+        Title="Character details"
+        Height="640" Width="560" MinWidth="440" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type services:CharacterSessionDetailRow}">
+            <Border Padding="10,8"
+                    Margin="0,0,0,10"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                <StackPanel>
+                    <TextBlock Text="{Binding DisplayTitle}"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding EntryType}"
+                               FontSize="11"
+                               Opacity="0.75"
+                               Margin="0,2,0,0"/>
+                    <TextBlock Text="{Binding DetailLine}"
+                               Margin="0,6,0,0"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                    <StackPanel Margin="0,8,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasNotes}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Notes" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBlock Text="{Binding Notes}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <TextBlock Text="Magic items"
+                               FontWeight="SemiBold"
+                               Margin="0,8,0,4"/>
+                    <TextBlock Text="{Binding MagicItemsDisplay}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid Margin="16,14,16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock x:Name="HeaderNameText"
+                           FontWeight="SemiBold" FontSize="15"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,14"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="132"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Character ID"/>
+                    <TextBox x:Name="IdText" Grid.Row="0" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Class"/>
+                    <TextBox x:Name="ClassText" Grid.Row="1" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Level"/>
+                    <TextBox x:Name="LevelText" Grid.Row="2" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="3" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Race"/>
+                    <TextBox x:Name="RaceText" Grid.Row="3" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="4" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Season"/>
+                    <TextBox x:Name="SeasonText" Grid.Row="4" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="5" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Tag"/>
+                    <TextBox x:Name="TagText" Grid.Row="5" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="6" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Last session"/>
+                    <TextBox x:Name="LastSessionText" Grid.Row="6" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+
+                    <Label Grid.Row="7" Grid.Column="0" Style="{StaticResource FormLabel}" Content="Local CSV"/>
+                    <TextBox x:Name="HasCsvText" Grid.Row="7" Grid.Column="1"
+                             IsReadOnly="True" BorderThickness="0" Padding="0" Margin="0,0,0,8"
+                             TextWrapping="Wrap" Background="Transparent"/>
+                </Grid>
+
+                <TextBlock Text="Session log (from downloaded CSV)"
+                           FontWeight="SemiBold"
+                           Margin="0,8,0,8"/>
+
+                <TextBlock x:Name="CsvSessionsHelpText"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                           Visibility="Collapsed"/>
+
+                <ItemsControl x:Name="SessionsList" Visibility="Collapsed"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Grid.Row="1"
+                HorizontalAlignment="Right"
+                Margin="0,14,0,0"
+                IsDefault="True"
+                IsCancel="True"
+                Content="_Close"
+                Click="OnCloseClick"/>
+    </Grid>
+</Window>
