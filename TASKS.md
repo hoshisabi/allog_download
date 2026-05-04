@@ -152,8 +152,10 @@ Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for
 ## 8) Packaging and distribution
 - [x] Versioning and build metadata
 - [x] Single-file distribution profile (win-x64)
+- [x] Raw `.exe` attached to GitHub releases (self-contained; no unzipping required)
 - [ ] First-run experience (explain credentials, delay, output defaults)
 - [ ] MSIX installer packaging
+- [ ] Code signing certificate — SmartScreen will warn on unsigned binaries regardless of packaging format; a cert is a prerequisite for a smooth installer experience
 
 ---
 
