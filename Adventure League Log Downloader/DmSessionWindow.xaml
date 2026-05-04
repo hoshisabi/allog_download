@@ -4,13 +4,32 @@
         Title="DM Session Downloader" Height="620" Width="960" MinWidth="700" MinHeight="460"
         WindowStartupLocation="CenterOwner">
     <DockPanel LastChildFill="True">
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem HorizontalAlignment="Left">
-                <TextBlock x:Name="StatusText" Text="Ready"/>
-            </StatusBarItem>
-        </StatusBar>
+        <StackPanel DockPanel.Dock="Bottom">
+            <DockPanel x:Name="OperationProgressPanel"
+                       Visibility="Collapsed"
+                       LastChildFill="True"
+                       Margin="8,4,8,4">
+                <Button x:Name="CancelOperationButton"
+                        DockPanel.Dock="Right"
+                        MinWidth="88"
+                        MinHeight="26"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Content="_Cancel"
+                        Click="OnCancelOperationClick"/>
+                <ProgressBar x:Name="OperationProgressBar"
+                               Height="20"
+                               Minimum="0"
+                               Maximum="100"/>
+            </DockPanel>
+            <StatusBar>
+                <StatusBarItem HorizontalAlignment="Left">
+                    <TextBlock x:Name="StatusText" Text="Ready"/>
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
 
-        <Grid Margin="16,14,16,12">
+        <Grid x:Name="MainWorkArea" Margin="16,14,16,12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>

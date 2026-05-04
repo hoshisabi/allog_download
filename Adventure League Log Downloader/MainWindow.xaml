@@ -9,15 +9,22 @@
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top" KeyboardNavigation.TabNavigation="Cycle">
             <MenuItem Header="_File">
-                <MenuItem Header="Export _session log workbook (CSV)…"
+                <MenuItem x:Name="ExportSessionLogMenuItem"
+                          Header="Export _session log workbook (CSV)…"
                           Click="OnExportSessionLogWorkbookClick"/>
                 <Separator/>
                 <MenuItem Header="E_xit" Click="OnExitClick"/>
             </MenuItem>
-            <MenuItem Header="_Options">
+            <MenuItem x:Name="OptionsMenu" Header="_Options">
                 <MenuItem Header="Save _Defaults" Click="OnSaveDefaultsClick"/>
                 <Separator/>
                 <MenuItem Header="_Account..." Click="OnAccountClick"/>
+                <MenuItem Header="_Forget stored credentials" Click="OnForgetCredentialsClick">
+                    <MenuItem.ToolTip>
+                        <TextBlock TextWrapping="Wrap" MaxWidth="280"
+                                   Text="Remove the saved username and password from Windows Credential Manager on this PC. Use Account… to sign in again."/>
+                    </MenuItem.ToolTip>
+                </MenuItem>
                 <MenuItem Header="_Data location..." Click="OnDataLocationClick"/>
                 <MenuItem Header="_Delay..." Click="OnDelayOptionsClick"/>
                 <Separator/>
@@ -29,27 +36,51 @@
             </MenuItem>
         </Menu>
 
-        <!-- StatusBar must NOT be the last child when LastChildFill=True; otherwise it fills the remaining space.
-             Place it before the content Grid so it docks to the bottom correctly. -->
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem HorizontalAlignment="Left">
-                <TextBlock x:Name="StatusText" Text="Ready"/>
-            </StatusBarItem>
-        </StatusBar>
+        <!-- Bottom stack: optional progress row, then status (must stay before main fill). -->
+        <StackPanel DockPanel.Dock="Bottom">
+            <DockPanel x:Name="OperationProgressPanel"
+                       Visibility="Collapsed"
+                       LastChildFill="True"
+                       Margin="8,4,8,4">
+                <Button x:Name="CancelOperationButton"
+                        DockPanel.Dock="Right"
+                        MinWidth="88"
+                        MinHeight="26"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Content="_Cancel"
+                        Click="OnCancelOperationClick"/>
+                <ProgressBar x:Name="OperationProgressBar"
+                               Height="20"
+                               Minimum="0"
+                               Maximum="100"/>
+            </DockPanel>
+            <StatusBar>
+                <StatusBarItem HorizontalAlignment="Left">
+                    <TextBlock x:Name="StatusText" Text="Ready"/>
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
 
         <!-- Keep the main content Grid as the LAST child so it fills the remaining space -->
-        <Grid Margin="16,14,16,12">
+        <Grid x:Name="MainWorkArea" Margin="16,14,16,12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock x:Name="LastWebsiteDownloadText"
-                       Grid.Row="0"
-                       Margin="0,0,0,10"
-                       TextWrapping="Wrap"
-                       Text="Last downloaded from site: never"/>
+            <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                <TextBlock x:Name="LastWebsiteDownloadText"
+                           TextWrapping="Wrap"
+                           Text="Last downloaded from site: never"/>
+                <TextBlock x:Name="PathHintText"
+                           TextWrapping="Wrap"
+                           Margin="0,6,0,0"
+                           Foreground="#B71C1C"
+                           FontSize="12"
+                           Visibility="Collapsed"/>
+            </StackPanel>
 
             <!-- Live character preview while scraping / from last saved file -->
             <Grid Grid.Row="1">

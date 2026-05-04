@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,6 +30,8 @@ public partial class MainWindow : Window
 
     private DmSessionWindow? _dmSessionWindow;
     private AdditionalDataWindow? _additionalDataWindow;
+
+    private CancellationTokenSource? _operationCts;
 
     public MainWindow()
     {
@@ -82,6 +85,38 @@ public partial class MainWindow : Window
             : "Account updated (not saved to Credential Manager).";
     }
 
+    private void OnForgetCredentialsClick(object sender, RoutedEventArgs e)
+    {
+        var confirm = System.Windows.MessageBox.Show(this,
+            "Remove saved Adventurers League credentials from Windows Credential Manager on this PC? You can sign in again from Options → Account.",
+            "Forget credentials",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question,
+            MessageBoxResult.No);
+        if (confirm != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            _credentialStore.Delete();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(this,
+                $"Could not remove credentials: {ex.Message}",
+                "Forget credentials",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        _accountUsername = string.Empty;
+        _accountPassword = string.Empty;
+        _rememberCredentials = false;
+        SetPathValidationHint(null);
+        StatusText.Text = "Saved credentials removed from this PC.";
+    }
+
     private async void OnSaveDefaultsClick(object sender, RoutedEventArgs e)
     {
         CopyCharacterCsvOptionsFromUiToSettings();
@@ -93,9 +128,12 @@ public partial class MainWindow : Window
     {
         if (!TryEnsureOutputPath(out var outputPath, out var msg))
         {
-            System.Windows.MessageBox.Show(this, msg, "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetPathValidationHint(msg);
+            StatusText.Text = "Set a valid data folder and file name (Options → Data location).";
             return;
         }
+
+        SetPathValidationHint(null);
 
         var chars = _characterPreview.Count > 0
             ? _characterPreview.ToList()
@@ -111,10 +149,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        BeginLongOperation();
         try
         {
             StatusText.Text = "Exporting session workbook…";
-            var result = await SessionLogWorkbookCsvExporter.ExportAsync(outputPath, chars);
+            var result = await SessionLogWorkbookCsvExporter.ExportAsync(outputPath, chars, GetOperationCancellationToken());
             StatusText.Text = "Session workbook exported.";
             var skipNote = result.CharactersSkippedNoCsv > 0
                 ? $"{result.CharactersSkippedNoCsv} character(s) had no local CSV and were skipped.{Environment.NewLine}{Environment.NewLine}"
@@ -127,10 +166,18 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Export cancelled.";
+        }
         catch (Exception ex)
         {
             StatusText.Text = "Export failed";
             System.Windows.MessageBox.Show(this, ex.Message, "Export", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            EndLongOperation();
         }
     }
 
@@ -274,9 +321,12 @@ public partial class MainWindow : Window
     {
         if (!TryEnsureOutputPath(out var outputPath, out var msg))
         {
-            System.Windows.MessageBox.Show(this, msg, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetPathValidationHint(msg);
+            StatusText.Text = "Set a valid data folder and file name (Options → Data location).";
             return;
         }
+
+        SetPathValidationHint(null);
 
         var selectedCharacters = CharactersDataGrid.SelectedItems
             .OfType<CharacterRecord>()
@@ -290,14 +340,18 @@ public partial class MainWindow : Window
                 return;
             }
 
-            DownloadButton.IsEnabled = false;
+            BeginLongOperation();
             try
             {
-                await DownloadSelectedCharacterCsvsAsync(selectedCharacters, outputPath);
+                await DownloadSelectedCharacterCsvsAsync(selectedCharacters, outputPath, GetOperationCancellationToken());
+            }
+            catch (OperationCanceledException)
+            {
+                StatusText.Text = "Cancelled.";
             }
             finally
             {
-                DownloadButton.IsEnabled = true;
+                EndLongOperation();
             }
 
             return;
@@ -315,19 +369,21 @@ public partial class MainWindow : Window
         var username = _accountUsername;
         var password = _accountPassword;
 
-        DownloadButton.IsEnabled = false;
+        BeginLongOperation();
         _characterPreview.Clear();
         CharactersPreviewSummary.Text = "Logging in…";
         StatusText.Text = "Logging in…";
 
-        IProgress<CharacterScrapeReport> progress = new System.Progress<CharacterScrapeReport>(ApplyScrapeReport);
+        var reportProgress =
+            (IProgress<CharacterScrapeReport>)new System.Progress<CharacterScrapeReport>(OnCharacterOperationProgress);
 
         try
         {
             var auth = new AdventurersLeagueAuth(username, password);
             var scraper = new CharacterScraper(auth);
+            var ct = GetOperationCancellationToken();
 
-            var results = await scraper.ScrapeAsync(_settings.DelaySeconds, progress);
+            var results = await scraper.ScrapeAsync(_settings.DelaySeconds, reportProgress, ct);
 
             var sorted = results.Values.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
             var dataDir = CharacterCsvDownloader.GetCharacterDataDirectory(outputPath);
@@ -346,10 +402,10 @@ public partial class MainWindow : Window
             {
                 StatusText.Text = "Downloading CSV files…";
                 var csvDownloader = new CharacterCsvDownloader(auth);
-                csvFailed = await csvDownloader.DownloadAllAsync(idsForCsv, dataDir, _settings.DelaySeconds, progress, sorted);
+                csvFailed = await csvDownloader.DownloadAllAsync(idsForCsv, dataDir, _settings.DelaySeconds, reportProgress, sorted, ct);
             }
 
-            var previousById = await CharacterJsonFile.TryLoadDictionaryAsync(outputPath);
+            var previousById = await CharacterJsonFile.TryLoadDictionaryAsync(outputPath, ct);
             foreach (var c in sorted)
             {
                 CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, outputPath);
@@ -361,7 +417,7 @@ public partial class MainWindow : Window
 
             CharacterCsvLocator.RefreshLocalCsvFlags(outputPath, sorted);
 
-            progress.Report(new CharacterScrapeReport
+            reportProgress.Report(new CharacterScrapeReport
             {
                 Phase = CharacterScrapePhase.Saving,
                 CharacterCount = sorted.Count,
@@ -371,7 +427,7 @@ public partial class MainWindow : Window
             StatusText.Text = "Saving character list…";
 
             var dictToSave = sorted.ToDictionary(c => c.Id, c => c);
-            await CharacterJsonFile.SaveAsync(outputPath, dictToSave);
+            await CharacterJsonFile.SaveAsync(outputPath, dictToSave, ct);
 
             _settings.LastWebsiteDownloadUtc = DateTimeOffset.UtcNow;
             await _settingsService.SaveAsync(_settings);
@@ -388,7 +444,7 @@ public partial class MainWindow : Window
                         ? $"Downloaded {csvOk} character CSV file(s) next to your character list."
                         : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). CSVs are next to your character list.";
 
-            progress.Report(new CharacterScrapeReport
+            reportProgress.Report(new CharacterScrapeReport
             {
                 Phase = CharacterScrapePhase.Complete,
                 CharacterCount = sorted.Count,
@@ -401,6 +457,17 @@ public partial class MainWindow : Window
                 ? $"Character list saved to:\n{outputPath}\n\n{csvDetail}"
                 : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({csvOk} ok{(csvFailed > 0 ? $", {csvFailed} failed" : "")}):\n{dataDir}";
             System.Windows.MessageBox.Show(this, successBody, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            ApplyScrapeReport(new CharacterScrapeReport
+            {
+                Phase = CharacterScrapePhase.Error,
+                CharacterCount = _characterPreview.Count,
+                Characters = _characterPreview.ToList(),
+                Detail = "Cancelled."
+            });
         }
         catch (Exception ex)
         {
@@ -416,7 +483,7 @@ public partial class MainWindow : Window
         }
         finally
         {
-            DownloadButton.IsEnabled = true;
+            EndLongOperation();
         }
     }
 
@@ -445,6 +512,7 @@ public partial class MainWindow : Window
         _settings.OutputFolder = dlg.OutputFolder;
         _settings.OutputFileName = dlg.OutputFileName;
         await _settingsService.SaveAsync(_settings);
+        SetPathValidationHint(null);
         await ReloadPreviewFromSavedFileAsync();
         StatusText.Text = "Data location updated.";
     }
@@ -507,6 +575,110 @@ public partial class MainWindow : Window
 
         outputPath = Path.Combine(folder, fileName);
         return true;
+    }
+
+    private void SetPathValidationHint(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            PathHintText.Visibility = Visibility.Collapsed;
+            PathHintText.Text = string.Empty;
+        }
+        else
+        {
+            PathHintText.Text = message;
+            PathHintText.Visibility = Visibility.Visible;
+        }
+    }
+
+    /// <summary>
+    /// Disables the main work area and several menu entries while a long-running download or export runs.
+    /// </summary>
+    private void SetMainWorkBusy(bool busy)
+    {
+        MainWorkArea.IsEnabled = !busy;
+        ExportSessionLogMenuItem.IsEnabled = !busy;
+        OptionsMenu.IsEnabled = !busy;
+    }
+
+    private void BeginLongOperation()
+    {
+        _operationCts?.Dispose();
+        _operationCts = new CancellationTokenSource();
+        OperationProgressPanel.Visibility = Visibility.Visible;
+        CancelOperationButton.IsEnabled = true;
+        OperationProgressBar.IsIndeterminate = true;
+        OperationProgressBar.Value = 0;
+        SetMainWorkBusy(true);
+    }
+
+    private void EndLongOperation()
+    {
+        SetMainWorkBusy(false);
+        OperationProgressPanel.Visibility = Visibility.Collapsed;
+        OperationProgressBar.IsIndeterminate = false;
+        _operationCts?.Dispose();
+        _operationCts = null;
+    }
+
+    private CancellationToken GetOperationCancellationToken() =>
+        _operationCts?.Token ?? CancellationToken.None;
+
+    private void OnCancelOperationClick(object sender, RoutedEventArgs e)
+    {
+        _operationCts?.Cancel();
+        CancelOperationButton.IsEnabled = false;
+    }
+
+    private void OnCharacterOperationProgress(CharacterScrapeReport report)
+    {
+        ApplyScrapeReport(report);
+        UpdateOperationProgressFromReport(report);
+    }
+
+    private void UpdateOperationProgressFromReport(CharacterScrapeReport report)
+    {
+        if (OperationProgressPanel.Visibility != Visibility.Visible)
+            return;
+
+        switch (report.Phase)
+        {
+            case CharacterScrapePhase.DiscoveringPages:
+                OperationProgressBar.IsIndeterminate = true;
+                break;
+            case CharacterScrapePhase.Scraping:
+                if (report.TotalPages is { } tp && tp > 0 && report.CurrentPage is { } cp)
+                {
+                    OperationProgressBar.IsIndeterminate = false;
+                    OperationProgressBar.Value = Math.Min(100, 50.0 * cp / tp);
+                }
+                else
+                    OperationProgressBar.IsIndeterminate = true;
+                break;
+            case CharacterScrapePhase.DownloadingCsvs:
+                if (report.CsvIndex is { } idx && report.CsvCount is { } cnt && cnt > 0)
+                {
+                    OperationProgressBar.IsIndeterminate = false;
+                    OperationProgressBar.Value = Math.Min(100, 50 + 40.0 * idx / cnt);
+                }
+                break;
+            case CharacterScrapePhase.Saving:
+                OperationProgressBar.IsIndeterminate = false;
+                OperationProgressBar.Value = 92;
+                break;
+            case CharacterScrapePhase.Complete:
+                OperationProgressBar.IsIndeterminate = false;
+                OperationProgressBar.Value = 100;
+                break;
+        }
+    }
+
+    private void UpdateSelectionCsvProgress(int indexOneBased, int total)
+    {
+        if (total <= 0)
+            return;
+        OperationProgressBar.IsIndeterminate = false;
+        OperationProgressBar.Value = 100.0 * indexOneBased / total;
     }
 
     private async Task ReloadPreviewFromSavedFileAsync()
@@ -574,7 +746,11 @@ public partial class MainWindow : Window
                 : $" · Page {p}"
             : "";
 
-        var head = $"{report.CharacterCount} characters · {phaseLabel}{pagePart}";
+        var csvPart = report.CsvIndex is { } cix && report.CsvCount is { } cct
+            ? $" · CSV {cix} of {cct}"
+            : "";
+
+        var head = $"{report.CharacterCount} characters · {phaseLabel}{pagePart}{csvPart}";
         CharactersPreviewSummary.Text = string.IsNullOrWhiteSpace(report.Detail)
             ? head
             : $"{head}{Environment.NewLine}{report.Detail}";
@@ -642,7 +818,10 @@ public partial class MainWindow : Window
             col.SortDirection = null;
     }
 
-    private async Task DownloadSelectedCharacterCsvsAsync(IReadOnlyList<CharacterRecord> selected, string outputPath)
+    private async Task DownloadSelectedCharacterCsvsAsync(
+        IReadOnlyList<CharacterRecord> selected,
+        string outputPath,
+        CancellationToken ct)
     {
         try
         {
@@ -655,10 +834,13 @@ public partial class MainWindow : Window
 
             for (var i = 0; i < total; i++)
             {
+                ct.ThrowIfCancellationRequested();
+
                 var c = selected[i];
+                UpdateSelectionCsvProgress(i + 1, total);
                 StatusText.Text = $"Downloading CSV {i + 1} of {total}: {c.Name}…";
 
-                var ok = await downloader.DownloadOneAsync(c.Id, dataDir);
+                var ok = await downloader.DownloadOneAsync(c.Id, dataDir, ct);
                 if (!ok)
                 {
                     failed++;
@@ -668,11 +850,11 @@ public partial class MainWindow : Window
                 CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, outputPath);
 
                 if (delayMs > 0 && i < total - 1)
-                    await Task.Delay(delayMs);
+                    await Task.Delay(delayMs, ct);
             }
 
             CharacterCsvLocator.RefreshLocalCsvFlags(outputPath, _characterPreview);
-            await CharacterJsonFile.SaveAsync(outputPath, _characterPreview.ToDictionary(x => x.Id, x => x));
+            await CharacterJsonFile.SaveAsync(outputPath, _characterPreview.ToDictionary(x => x.Id, x => x), ct);
 
             CharactersDataGrid.Items.Refresh();
             StatusText.Text = "Done";
@@ -683,6 +865,10 @@ public partial class MainWindow : Window
                 : $"Downloaded {okCount} CSV file(s); {failed} failed (check status / connection).\n\nFolder:\n{dataDir}";
             System.Windows.MessageBox.Show(this, body, "Download", MessageBoxButton.OK,
                 failed == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

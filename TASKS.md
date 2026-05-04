@@ -27,10 +27,10 @@ Checked items are completed. Unchecked are pending.
   - [x] Apply consistent styling (brushes, fonts, themes) to match WPF conventions
   - [x] Add visual feedback for focused/disabled states
 - [ ] **Verify UI cleanup** — run the built app on Windows; confirm layout, spacing, Alt+mnemonics, tab order, focus and disabled visuals, and the Options dialog; note any theme issues (e.g. light vs dark).
-- [ ] Non-blocking runs (async with UI responsiveness; disable/enable inputs for all long tasks) — *ESSENTIAL FOR MVP; implement alongside Section 4 features*
-- [ ] Progress bar + Cancel button during long-running operations
+- [ ] Non-blocking runs (async with UI responsiveness; full-window responsiveness) — *partial: main work area + Options/File export disabled during Download / CSV-only export / session workbook export*
+- [x] Progress bar + Cancel button during long-running operations *(main window: roster download, bulk CSV, selected CSV export workbook; cancel via `CancellationToken` where supported)*
 - [ ] Error surface improvements (step-specific errors; link to logs)
-- [ ] Validate all fields with inline hints; preserve focus/selection on errors
+- [ ] Validate all fields with inline hints; preserve focus/selection on errors — *partial: data location validation hint text under “Last downloaded…” (no modal for missing folder/file name)*
 - [ ] Keyboard navigation/tab order; access keys on menu and buttons
 - [x] About dialog: version/build info; link to repo/issue tracker
 
@@ -40,7 +40,7 @@ Checked items are completed. Unchecked are pending.
 - [x] Implement `IAdventurersLeagueAuth` and `AdventurersLeagueAuth` with cookie/CSRF handling
 - [x] Verify login and discover `userId` from returned HTML
 - [x] Wire Run to authenticate using supplied credentials
-- [ ] "Forget credentials" action in menu; explanatory tooltip/help text
+- [x] "Forget credentials" action in menu; explanatory tooltip/help text *(Options → Forget stored credentials)*
 - [ ] Cross-platform credential store abstraction — *WINDOWS ONLY FOR MVP*; macOS Keychain and Linux Secret Service can be added in future iterations
 
 ---

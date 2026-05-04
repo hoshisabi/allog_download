@@ -4,16 +4,43 @@
         Title="Additional site data" Height="640" Width="720" MinWidth="560" MinHeight="480"
         WindowStartupLocation="CenterOwner">
     <DockPanel LastChildFill="True">
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem HorizontalAlignment="Left">
-                <TextBlock x:Name="StatusText" Text="Ready"/>
-            </StatusBarItem>
-        </StatusBar>
+        <StackPanel DockPanel.Dock="Bottom">
+            <DockPanel x:Name="OperationProgressPanel"
+                       Visibility="Collapsed"
+                       LastChildFill="True"
+                       Margin="8,4,8,4">
+                <Button x:Name="CancelOperationButton"
+                        DockPanel.Dock="Right"
+                        MinWidth="88"
+                        MinHeight="26"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Content="_Cancel"
+                        Click="OnCancelOperationClick"/>
+                <ProgressBar x:Name="OperationProgressBar"
+                               Height="20"
+                               Minimum="0"
+                               Maximum="100"/>
+            </DockPanel>
+            <StatusBar>
+                <StatusBarItem HorizontalAlignment="Left">
+                    <TextBlock x:Name="StatusText" Text="Ready"/>
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer x:Name="MainWorkArea"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="16,14,16,12">
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,14"
                            Text="Optional account data from AdventurersLeagueLog.com: saved locations, saved DM names, and campaigns (including campaign log pages). Saved next to your other files in the data folder."/>
+
+                <Button x:Name="DownloadAllButton"
+                        Margin="0,0,0,16"
+                        HorizontalAlignment="Left"
+                        Click="OnDownloadAllClick"
+                        Content="Download _everything (locations, player DMs, campaigns)"/>
 
                 <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="Locations"/>
                 <DataGrid x:Name="LocationsGrid"
