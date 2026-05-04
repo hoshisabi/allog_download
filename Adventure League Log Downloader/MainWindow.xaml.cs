@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -201,14 +200,8 @@ public partial class MainWindow : Window
 
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
-        var ver = typeof(MainWindow).Assembly
-            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
-        System.Windows.MessageBox.Show(this,
-            $"Adventurers League Log Downloader{(string.IsNullOrEmpty(ver) ? "" : $" (v{ver})")}\nWPF front-end for scraping and exporting logs.",
-            "About",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        var dlg = new AboutDialog { Owner = this };
+        dlg.ShowDialog();
     }
 
     private void OnOpenDataFilesInExplorerClick(object sender, RoutedEventArgs e)

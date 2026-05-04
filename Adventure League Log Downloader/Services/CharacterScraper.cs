@@ -6,8 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
-
 namespace Adventure_League_Log_Downloader.Services;
 
 /// <summary>
@@ -40,48 +38,7 @@ public sealed class CharacterScraper
         }
 
         var html = await resp.Content.ReadAsStringAsync(ct);
-        var doc = new HtmlAgilityPack.HtmlDocument();
-        doc.LoadHtml(html);
-
-        // Strategy 1: gather all anchors with an href containing "page=" and take the max
-        int maxFromLinks = 1;
-        var anchors = doc.DocumentNode.SelectNodes("//a[@href]");
-        if (anchors != null)
-        {
-            foreach (var a in anchors)
-            {
-                var href = a.GetAttributeValue("href", string.Empty);
-                if (string.IsNullOrEmpty(href)) continue;
-                var idx = href.IndexOf("page=", StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) continue;
-                var after = href[(idx + 5)..];
-                var ampIdx = after.IndexOf('&');
-                var pageStr = ampIdx >= 0 ? after[..ampIdx] : after;
-                if (int.TryParse(pageStr, out var p))
-                    if (p > maxFromLinks) maxFromLinks = p;
-            }
-        }
-
-        if (maxFromLinks > 1)
-            return maxFromLinks;
-
-        // Strategy 2: look for a visible ">>" link specifically
-        var lastLink = doc.DocumentNode.SelectNodes("//a")?.FirstOrDefault(a => a.InnerText.Trim().Replace("\u00BB", ">>") == ">>");
-        if (lastLink != null)
-        {
-            var href = lastLink.GetAttributeValue("href", "");
-            var idx = href.IndexOf("page=", StringComparison.OrdinalIgnoreCase);
-            if (idx >= 0)
-            {
-                var after = href[(idx + 5)..];
-                var ampIdx = after.IndexOf('&');
-                var pageStr = ampIdx >= 0 ? after[..ampIdx] : after;
-                if (int.TryParse(pageStr, out var p))
-                    return Math.Max(1, p);
-            }
-        }
-
-        return 1;
+        return CharacterPageHtml.GetMaxPageNumber(html);
     }
 
     /// <summary>
@@ -205,60 +162,10 @@ public sealed class CharacterScraper
 
     private int ParseCharacterTable(string html)
     {
-        var doc = new HtmlAgilityPack.HtmlDocument();
-        doc.LoadHtml(html);
-
-        // Select all rows under any table body
-        var rows = doc.DocumentNode.SelectNodes("//table//tbody//tr");
-        if (rows == null) return 0;
-
-        int parsedCount = 0;
-
-        foreach (var row in rows)
-        {
-            var cells = row.SelectNodes(".//td");
-            if (cells == null || cells.Count < 2) continue; // need at least id/name column
-
-            string season = HtmlEntity.DeEntitize(cells.ElementAtOrDefault(0)?.InnerText ?? string.Empty).Trim();
-
-            // The id and name are in the 2nd column with an <a href="/characters/{id}">Name</a>
-            var idAnchor = cells.ElementAtOrDefault(1)?.SelectSingleNode(".//a[@href]");
-            string id = string.Empty;
-            string name = "UNKNOWN";
-            if (idAnchor != null)
-            {
-                var href = idAnchor.GetAttributeValue("href", "").Trim();
-                if (!string.IsNullOrEmpty(href))
-                {
-                    var slashIdx = href.LastIndexOf('/') + 1;
-                    if (slashIdx > 0 && slashIdx < href.Length)
-                        id = href.Substring(slashIdx);
-                }
-                name = HtmlEntity.DeEntitize(idAnchor.InnerText).Trim();
-            }
-
-            string race = HtmlEntity.DeEntitize(cells.ElementAtOrDefault(2)?.InnerText ?? string.Empty).Trim();
-            string @class = HtmlEntity.DeEntitize(cells.ElementAtOrDefault(3)?.InnerText ?? string.Empty).Trim();
-            string level = HtmlEntity.DeEntitize(cells.ElementAtOrDefault(4)?.InnerText ?? string.Empty).Trim();
-            string tag = HtmlEntity.DeEntitize(cells.ElementAtOrDefault(5)?.InnerText ?? string.Empty).Trim();
-
-            if (string.IsNullOrEmpty(id))
-                continue; // skip malformed rows
-
-            _characters[id] = new CharacterRecord
-            {
-                Id = id,
-                Name = name,
-                Race = race,
-                Class = @class,
-                Level = level,
-                Season = season,
-                Tag = tag
-            };
-            parsedCount++;
-        }
-
-        return parsedCount;
+        var rows = CharacterPageHtml.ParseCharacterTableRows(html);
+        foreach (var r in rows)
+            _characters[r.Id] = r;
+        return rows.Count;
     }
 
     /// <summary>

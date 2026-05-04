@@ -32,7 +32,7 @@ Checked items are completed. Unchecked are pending.
 - [ ] Error surface improvements (step-specific errors; link to logs)
 - [ ] Validate all fields with inline hints; preserve focus/selection on errors
 - [ ] Keyboard navigation/tab order; access keys on menu and buttons
-- [ ] About dialog: version/build info; link to repo/issue tracker
+- [x] About dialog: version/build info; link to repo/issue tracker
 
 ---
 
@@ -52,7 +52,7 @@ Checked items are completed. Unchecked are pending.
 - [x] Save JSON output keyed by character id with camelCase properties
 - [ ] Per-page/total row counts shown in UI during run; final summary in status bar
 - [ ] Option to open output file/folder after save
-- [ ] Unit tests with small HTML fixtures: pagination discovery, row parsing edge cases
+- [x] Unit tests with small HTML fixtures: pagination discovery, row parsing edge cases (`Adventure League Log Downloader.Tests`)
 
 ---
 
@@ -85,7 +85,7 @@ Checked items are completed. Unchecked are pending.
 ## 7) Architecture and quality
 - [ ] Introduce light MVVM (ViewModels for windows/dialogs; keep services UI-agnostic)
 - [ ] Dependency injection for services to ease testing (auth, scraper, settings, credential store)
-- [ ] Unit tests for services (auth token extraction, pagination, HTML parsing); mocks for HTTP
+- [ ] Unit tests with mocked HTTP for full auth/scraper flows *(HTML parsing / CSRF / user-id helpers covered in test project)*
 - [ ] File-based rolling log; user-openable from Help menu
 
 ---
@@ -168,7 +168,9 @@ Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for
 - [ ] Background sync with scheduled fetches
 - [ ] Bookmarklet or browser extension to scrape site data and bypass Cloudflare blocking
 - [ ] GitHub Actions for periodic automated data updates
-- [ ] Migrate to official API if/when available (switchable backend)
+
+### Deprioritized / icebox
+- [ ] Migrate to official API if/when available (switchable backend) — *deprioritized; site scraping remains the plan*
 
 ---
 
