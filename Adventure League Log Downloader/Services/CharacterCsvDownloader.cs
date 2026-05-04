@@ -56,6 +56,8 @@ public sealed class CharacterCsvDownloader
                 Phase = CharacterScrapePhase.DownloadingCsvs,
                 CharacterCount = charactersForUiSnapshot.Count,
                 Characters = charactersForUiSnapshot,
+                CsvIndex = i + 1,
+                CsvCount = total,
                 Detail = $"Downloading character CSVs: {i + 1} of {total}…"
             });
 
@@ -69,6 +71,8 @@ public sealed class CharacterCsvDownloader
                     Phase = CharacterScrapePhase.DownloadingCsvs,
                     CharacterCount = charactersForUiSnapshot.Count,
                     Characters = charactersForUiSnapshot,
+                    CsvIndex = i + 1,
+                    CsvCount = total,
                     Detail = $"CSV for character {id}: HTTP {errCode} (skipped)."
                 });
             }

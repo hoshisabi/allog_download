@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using Adventure_League_Log_Downloader.Services;
 
@@ -14,6 +16,8 @@ public partial class AdditionalDataWindow : Window
     private string _accountUsername;
     private string _accountPassword;
     private bool _rememberCredentials;
+
+    private CancellationTokenSource? _operationCts;
 
     private readonly ObservableCollection<LocationRecord> _locations = new();
     private readonly ObservableCollection<PlayerDmRecord> _playerDms = new();
@@ -144,22 +148,110 @@ public partial class AdditionalDataWindow : Window
         return true;
     }
 
+    private void BeginOperation()
+    {
+        _operationCts?.Dispose();
+        _operationCts = new CancellationTokenSource();
+        OperationProgressPanel.Visibility = Visibility.Visible;
+        CancelOperationButton.IsEnabled = true;
+        OperationProgressBar.IsIndeterminate = true;
+        OperationProgressBar.Value = 0;
+        MainWorkArea.IsEnabled = false;
+    }
+
+    private void EndOperation()
+    {
+        MainWorkArea.IsEnabled = true;
+        OperationProgressPanel.Visibility = Visibility.Collapsed;
+        OperationProgressBar.IsIndeterminate = false;
+        _operationCts?.Dispose();
+        _operationCts = null;
+    }
+
+    private CancellationToken GetOperationCancellationToken() =>
+        _operationCts?.Token ?? CancellationToken.None;
+
+    private void OnCancelOperationClick(object sender, RoutedEventArgs e)
+    {
+        _operationCts?.Cancel();
+        CancelOperationButton.IsEnabled = false;
+    }
+
+    private async void OnDownloadAllClick(object sender, RoutedEventArgs e)
+    {
+        if (!EnsureAccountCredentials())
+            return;
+
+        BeginOperation();
+        OperationProgressBar.IsIndeterminate = false;
+        var ct = GetOperationCancellationToken();
+        try
+        {
+            var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
+            var scraper = new AdditionalSiteDataScraper(auth);
+
+            StatusText.Text = "Downloading locations…";
+            OperationProgressBar.Value = 5;
+            await scraper.DownloadLocationsAsync(_outputFolder, DelaySeconds, ct);
+            OperationProgressBar.Value = 33;
+
+            StatusText.Text = "Downloading player DMs…";
+            OperationProgressBar.Value = 38;
+            await scraper.DownloadPlayerDmsAsync(_outputFolder, DelaySeconds, ct);
+            OperationProgressBar.Value = 66;
+
+            StatusText.Text = "Downloading campaigns (this may take a while)…";
+            OperationProgressBar.IsIndeterminate = true;
+            await scraper.DownloadCampaignsAsync(_outputFolder, DelaySeconds, ct);
+            OperationProgressBar.IsIndeterminate = false;
+            OperationProgressBar.Value = 100;
+
+            await ReloadFromDiskAsync();
+            StatusText.Text = "Done";
+            var msg =
+                $"Locations:{Environment.NewLine}{AdditionalSiteDataJson.LocationsPath(_outputFolder)}{Environment.NewLine}{Environment.NewLine}" +
+                $"Player DMs:{Environment.NewLine}{AdditionalSiteDataJson.PlayerDmsPath(_outputFolder)}{Environment.NewLine}{Environment.NewLine}" +
+                $"Campaigns:{Environment.NewLine}{AdditionalSiteDataJson.CampaignsPath(_outputFolder)}";
+            System.Windows.MessageBox.Show(this, msg, "Additional site data", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            await ReloadFromDiskAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Error";
+            System.Windows.MessageBox.Show(this, ex.Message, "Additional site data", MessageBoxButton.OK, MessageBoxImage.Error);
+            await ReloadFromDiskAsync();
+        }
+        finally
+        {
+            EndOperation();
+        }
+    }
+
     private async void OnDownloadLocationsClick(object sender, RoutedEventArgs e)
     {
         if (!EnsureAccountCredentials())
             return;
 
-        SetBusy(true);
-        StatusText.Text = "Downloading locations…";
+        BeginOperation();
         try
         {
             var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
             var scraper = new AdditionalSiteDataScraper(auth);
-            await scraper.DownloadLocationsAsync(_outputFolder, DelaySeconds);
+            StatusText.Text = "Downloading locations…";
+            await scraper.DownloadLocationsAsync(_outputFolder, DelaySeconds, GetOperationCancellationToken());
             await ReloadFromDiskAsync();
             StatusText.Text = "Done";
             System.Windows.MessageBox.Show(this, $"Saved {AdditionalSiteDataJson.LocationsPath(_outputFolder)}", "Locations",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            await ReloadFromDiskAsync();
         }
         catch (Exception ex)
         {
@@ -168,7 +260,7 @@ public partial class AdditionalDataWindow : Window
         }
         finally
         {
-            SetBusy(false);
+            EndOperation();
         }
     }
 
@@ -177,17 +269,22 @@ public partial class AdditionalDataWindow : Window
         if (!EnsureAccountCredentials())
             return;
 
-        SetBusy(true);
-        StatusText.Text = "Downloading player DMs…";
+        BeginOperation();
         try
         {
             var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
             var scraper = new AdditionalSiteDataScraper(auth);
-            await scraper.DownloadPlayerDmsAsync(_outputFolder, DelaySeconds);
+            StatusText.Text = "Downloading player DMs…";
+            await scraper.DownloadPlayerDmsAsync(_outputFolder, DelaySeconds, GetOperationCancellationToken());
             await ReloadFromDiskAsync();
             StatusText.Text = "Done";
             System.Windows.MessageBox.Show(this, $"Saved {AdditionalSiteDataJson.PlayerDmsPath(_outputFolder)}", "Player DMs",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            await ReloadFromDiskAsync();
         }
         catch (Exception ex)
         {
@@ -196,7 +293,7 @@ public partial class AdditionalDataWindow : Window
         }
         finally
         {
-            SetBusy(false);
+            EndOperation();
         }
     }
 
@@ -205,17 +302,22 @@ public partial class AdditionalDataWindow : Window
         if (!EnsureAccountCredentials())
             return;
 
-        SetBusy(true);
-        StatusText.Text = "Downloading campaigns (this may take a while)…";
+        BeginOperation();
         try
         {
             var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
             var scraper = new AdditionalSiteDataScraper(auth);
-            await scraper.DownloadCampaignsAsync(_outputFolder, DelaySeconds);
+            StatusText.Text = "Downloading campaigns (this may take a while)…";
+            await scraper.DownloadCampaignsAsync(_outputFolder, DelaySeconds, GetOperationCancellationToken());
             await ReloadFromDiskAsync();
             StatusText.Text = "Done";
             System.Windows.MessageBox.Show(this, $"Saved {AdditionalSiteDataJson.CampaignsPath(_outputFolder)}", "Campaigns",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            await ReloadFromDiskAsync();
         }
         catch (Exception ex)
         {
@@ -224,14 +326,7 @@ public partial class AdditionalDataWindow : Window
         }
         finally
         {
-            SetBusy(false);
+            EndOperation();
         }
-    }
-
-    private void SetBusy(bool busy)
-    {
-        DownloadLocationsButton.IsEnabled = !busy;
-        DownloadPlayerDmsButton.IsEnabled = !busy;
-        DownloadCampaignsButton.IsEnabled = !busy;
     }
 }

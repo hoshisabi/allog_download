@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +22,8 @@ public partial class DmSessionWindow : Window
     private string _accountUsername;
     private string _accountPassword;
     private bool _rememberCredentials;
+
+    private CancellationTokenSource? _operationCts;
 
     public DmSessionWindow(
         ICredentialStore credentialStore,
@@ -68,6 +71,35 @@ public partial class DmSessionWindow : Window
         }
 
         await LoadPreviewFromFileAsync();
+    }
+
+    private void BeginOperation()
+    {
+        _operationCts?.Dispose();
+        _operationCts = new CancellationTokenSource();
+        OperationProgressPanel.Visibility = Visibility.Visible;
+        CancelOperationButton.IsEnabled = true;
+        OperationProgressBar.IsIndeterminate = true;
+        OperationProgressBar.Value = 0;
+        MainWorkArea.IsEnabled = false;
+    }
+
+    private void EndOperation()
+    {
+        MainWorkArea.IsEnabled = true;
+        OperationProgressPanel.Visibility = Visibility.Collapsed;
+        OperationProgressBar.IsIndeterminate = false;
+        _operationCts?.Dispose();
+        _operationCts = null;
+    }
+
+    private CancellationToken GetOperationCancellationToken() =>
+        _operationCts?.Token ?? CancellationToken.None;
+
+    private void OnCancelOperationClick(object sender, RoutedEventArgs e)
+    {
+        _operationCts?.Cancel();
+        CancelOperationButton.IsEnabled = false;
     }
 
     private void OnClearSessionSelectionClick(object sender, RoutedEventArgs e) =>
@@ -121,18 +153,22 @@ public partial class DmSessionWindow : Window
             .ToList();
         if (selectedSessions.Count > 0)
         {
-            DownloadButton.IsEnabled = false;
+            BeginOperation();
             try
             {
                 StatusText.Text = $"Fetching detail for {selectedSessions.Count} session(s)…";
+                OperationProgressBar.IsIndeterminate = true;
                 await PersistDmSessionOptionsToSettingsAsync();
                 var settings = await _settingsService.LoadAsync();
                 var auth = new AdventurersLeagueAuth(_accountUsername, _accountPassword);
                 var scraper = new DmSessionScraper(auth);
+                var ct = GetOperationCancellationToken();
                 var (ok, failed) = await scraper.FetchSessionDetailsBatchAsync(
-                    outputPath, selectedSessions, settings.DelaySeconds);
+                    outputPath, selectedSessions, settings.DelaySeconds, ct);
                 await LoadPreviewFromFileAsync();
                 StatusText.Text = "Done";
+                OperationProgressBar.IsIndeterminate = false;
+                OperationProgressBar.Value = 100;
 
                 if (ok == 0 && failed > 0)
                 {
@@ -151,6 +187,11 @@ public partial class DmSessionWindow : Window
                         failed == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                StatusText.Text = "Cancelled.";
+                await LoadPreviewFromFileAsync();
+            }
             catch (Exception ex)
             {
                 StatusText.Text = "Error";
@@ -158,18 +199,19 @@ public partial class DmSessionWindow : Window
             }
             finally
             {
-                DownloadButton.IsEnabled = true;
+                EndOperation();
             }
 
             return;
         }
 
-        DownloadButton.IsEnabled = false;
+        BeginOperation();
         _sessionPreview.Clear();
         SessionsSummary.Text = "Starting…";
         StatusText.Text = "Starting…";
 
-        IProgress<DmSessionScrapeReport> progress = new System.Progress<DmSessionScrapeReport>(ApplyReport);
+        IProgress<DmSessionScrapeReport> progress =
+            new System.Progress<DmSessionScrapeReport>(OnDmSessionProgress);
 
         try
         {
@@ -181,12 +223,14 @@ public partial class DmSessionWindow : Window
             var scraper = new DmSessionScraper(auth);
             var skipDetails = SkipDmSessionDetailsCheckBox.IsChecked == true;
             var onlyMissing = OnlyMissingDmSessionDetailsCheckBox.IsChecked == true;
+            var ct = GetOperationCancellationToken();
             var results = await scraper.ScrapeAsync(
                 outputPath,
                 settings.DelaySeconds,
                 progress,
                 skipDetailPages: skipDetails,
-                onlyFetchMissingDetailPages: onlyMissing);
+                onlyFetchMissingDetailPages: onlyMissing,
+                ct);
 
             var sorted = results.Values
                 .OrderByDescending(s => s.DateDmed)
@@ -201,6 +245,11 @@ public partial class DmSessionWindow : Window
                 $"{sorted.Count} DM session(s) · {detailCount} with full details · saved to {Path.GetFileName(outputPath)}";
             StatusText.Text = "Done";
         }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Cancelled.";
+            await LoadPreviewFromFileAsync();
+        }
         catch (Exception ex)
         {
             SessionsSummary.Text = $"Error: {ex.Message}";
@@ -209,7 +258,52 @@ public partial class DmSessionWindow : Window
         }
         finally
         {
-            DownloadButton.IsEnabled = true;
+            EndOperation();
+        }
+    }
+
+    private void OnDmSessionProgress(DmSessionScrapeReport report)
+    {
+        ApplyReport(report);
+        UpdateDmOperationProgress(report);
+    }
+
+    private void UpdateDmOperationProgress(DmSessionScrapeReport report)
+    {
+        if (OperationProgressPanel.Visibility != Visibility.Visible)
+            return;
+
+        switch (report.Phase)
+        {
+            case DmSessionScrapePhase.DiscoveringPages:
+                OperationProgressBar.IsIndeterminate = true;
+                break;
+            case DmSessionScrapePhase.ScrapingList:
+                if (report.TotalPages is { } tp && tp > 0 && report.CurrentPage is { } cp)
+                {
+                    OperationProgressBar.IsIndeterminate = false;
+                    OperationProgressBar.Value = Math.Min(100, 45.0 * cp / tp);
+                }
+                else
+                    OperationProgressBar.IsIndeterminate = true;
+                break;
+            case DmSessionScrapePhase.Saving:
+                OperationProgressBar.IsIndeterminate = false;
+                OperationProgressBar.Value = 47;
+                break;
+            case DmSessionScrapePhase.FetchingDetails:
+                if (report.DetailsFetched is { } df && report.DetailsTotal is { } dt && dt > 0)
+                {
+                    OperationProgressBar.IsIndeterminate = false;
+                    OperationProgressBar.Value = Math.Min(100, 50 + 48.0 * df / dt);
+                }
+                else
+                    OperationProgressBar.IsIndeterminate = true;
+                break;
+            case DmSessionScrapePhase.Complete:
+                OperationProgressBar.IsIndeterminate = false;
+                OperationProgressBar.Value = 100;
+                break;
         }
     }
 

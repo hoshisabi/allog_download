@@ -22,6 +22,13 @@ public sealed class CharacterScrapeReport
     public CharacterScrapePhase Phase { get; init; }
     public int? CurrentPage { get; init; }
     public int? TotalPages { get; init; }
+
+    /// <summary>1-based index during bulk CSV download (when <see cref="CsvCount"/> is set).</summary>
+    public int? CsvIndex { get; init; }
+
+    /// <summary>Total CSV files in the current bulk download batch.</summary>
+    public int? CsvCount { get; init; }
+
     public int CharacterCount { get; init; }
     public IReadOnlyList<CharacterRecord> Characters { get; init; } = Array.Empty<CharacterRecord>();
     public string? Detail { get; init; }
