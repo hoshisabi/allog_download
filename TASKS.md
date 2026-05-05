@@ -53,6 +53,21 @@ Checked items are completed. Unchecked are pending.
 - [ ] Per-page/total row counts shown in UI during run; final summary in status bar
 - [ ] Option to open output file/folder after save
 - [x] Unit tests with small HTML fixtures: pagination discovery, row parsing edge cases (`Adventure League Log Downloader.Tests`)
+- [ ] **Unit tests for export and persistence logic** *(high priority — currently untested)*
+  - [ ] `SessionLogWorkbookCsvExporter` — given a set of character CSV fixtures, assert row count, column mapping, skip behavior for missing CSVs
+  - [ ] `CharacterCsvDetailReader` / `CharacterLogCsvReader` — round-trip parse of known CSV shapes
+  - [ ] `SettingsService` — load/save round-trip; missing file returns defaults; corrupt file does not throw
+
+---
+
+## 4b) Scraping resilience *(high priority, not immediate)*
+
+The site's HTML structure is the only interface this tool has. When it changes, the app silently produces bad data or crashes — and if scraping breaks entirely, the tool loses its core purpose. This is a chronic maintenance risk worth actively managing.
+
+- [ ] **Sanity checks with user-visible warnings** — after a scrape, if the character count is 0 or implausibly low relative to the previous run, surface an explicit warning ("Expected characters but found none — the site may have changed") rather than silently saving an empty list
+- [ ] **Structured parse diagnostics** — when a character row is missing expected fields, log which fields were absent rather than swallowing the gap silently; expose this in a Help → Show log or similar
+- [ ] **Fixture-based regression snapshots** — periodically capture a real (anonymized) page of HTML from the site and add it to the test fixtures; if the parser output changes, a test fails before users notice
+- [ ] **Long-term: local data independence** — per-user local data copies (downloaded CSVs) already partially decouple from the site; the goal of making the tool useful without live scraping should inform which features get built into Core first (export, workbook, MSC) so users who have already synced are not blocked when the site changes
 
 ---
 
@@ -146,6 +161,23 @@ Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for
 
 **Phase E — Full GUI rework** *(last)*  
 - [ ] Replace or supplement WPF with a cross-platform desktop UI **after** Core and console hosts are stable; new features should already live in Core where possible
+- **Note: Phase A is a hard prerequisite for Phase E, not a parallel workstream.** `MainWindow.xaml.cs` is ~900 lines with download orchestration, auth, scraping, CSV, and JSON all wired directly in code-behind with no DI. Porting that file to Avalonia before extraction roughly doubles the UI rewrite effort. Do Phase A first.
+
+**Phase E notes — Avalonia port estimate (2025-05-05)**
+
+Preferred framework: **Avalonia UI** over MAUI — desktop-first, better macOS stability, no mobile overhead. CORS is not an issue since it runs native.
+
+Estimated effort with AI-assisted development: **one long evening or two normal ones** (~3–5 hours total).
+
+Breakdown:
+- **Service layer migration (~1 hr):** Nearly all of `Services/*` compiles unchanged once in Core. Only `WindowsCredentialStore` needs a cross-platform replacement (e.g. a small NuGet keychain abstraction or obfuscated file fallback per `SECURITY.md`).
+- **UI rewrite (~2–4 hrs):** 9 windows/dialogs; none are complex. Avalonia data binding is close enough to WPF that code-behind logic copies with minor changes. XAML is rewritten from scratch, but layout fidelity is not a goal.
+- **Wildcards:** First-time Avalonia project setup friction; DataGrid quirks vs WPF; any hidden WPF-specific APIs in code-behind (`Dispatcher`, `DependencyProperty`, etc.).
+
+Migration impact on existing users (all Windows as of 2025-05-05):
+- Settings (`%AppData%\AllogDownloader\settings.json`) — survive as-is; `SpecialFolder.ApplicationData` resolves identically.
+- Downloaded CSVs/JSON — unaffected (user-chosen paths).
+- Saved credentials — one-time re-login; Windows Credential Manager is Windows-only and not carried forward.
 
 ---
 
@@ -156,6 +188,7 @@ Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for
 - [ ] First-run experience (explain credentials, delay, output defaults)
 - [ ] MSIX installer packaging
 - [ ] Code signing certificate — SmartScreen will warn on unsigned binaries regardless of packaging format; a cert is a prerequisite for a smooth installer experience
+- [ ] **Update notification** *(medium priority)* — on startup, check the GitHub releases API for a newer version and surface a non-blocking hint in the status bar or About dialog; no auto-install, just awareness
 
 ---
 
