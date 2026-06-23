@@ -13,13 +13,7 @@
         <Company>Adventurers League</Company>
         <Description>A tool to download character logs from Adventurers League.</Description>
         <Copyright>Copyright © 2026</Copyright>
-        
-        <!-- Publishing configuration -->
-        <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
   <ItemGroup>
