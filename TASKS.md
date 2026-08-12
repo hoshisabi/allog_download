@@ -209,14 +209,48 @@ Migration impact on existing users (all Windows as of 2025-05-05):
 
 ---
 
-## 11) PDF export *(lowest priority)*
+## 11) AL Service Rewards tracker (ALSR v2026.1)
+
+Design, rules digest, and decision record: **`docs/service-rewards-tracker.md`**. V1 is redemption tracking (the manual file `hoshisabi.github.io/rpg/al/service_rewards.md` shows that's where tracking died — hours were never the constraint); the Warhorn-fed hours ledger is v2. All services are UI-free C# in `Services/` (Core-ready per §7b). Tasks are ordered one task → one test → one commit.
+
+**v1 — Redemption tracking**
+- [ ] Reward-menu data format: per-ALSR-version JSON (id, date range, sections with cost + slots — fixed items with `SourceUrl` vs open "campaign-available" slots — repeatables, unique/steeping double-cost, write-in claim limits) + loader (test: schema round-trip on a small fixture)
+- [ ] Encode the ALSR 2026.1 menu (Rewards by Rarity, Repeatable, Adventure Rewards) as embedded data (test: loads, slot counts match the document)
+- [ ] `ServiceRedemption` model + persistence in `service_rewards.json`: slot ref, `DisplayName`, `FunctionsAs`, `SourceUrl`, flavor, `ItemAssignedTo`, `LevelAssignedTo`, `SecondaryRewardChoice` (DT|GP + amount), `AdventureCode`, `HoursSpent`, date (test: round-trip; missing file → empty; corrupt file does not throw)
+- [ ] Historical-file parser: `- [x] Name + secondary (I:x/L:y)` lines incl. `[X]`, `(I?/L?)`, `(IL:x)`, bare `(Name)`, write-ins with `-Nhr` (test: fixture excerpts from the real file across 11A/12B/50thA formats)
+- [ ] Encode legacy version menus (11A, 11B, 12A, 12B, 12C, 50thA, 50th-1.2, 2.1) as data, driven by what the parser finds (test: every parsed redemption maps to a menu slot)
+- [ ] One-time import command wiring parser → redemption store; unknown assignments land as unassigned (test: import is idempotent)
+- [ ] `ServiceRewardsWindow` v1: version picker, menu view with checkbox slots, slots-used totals, following `DmSessionWindow` patterns
+- [ ] Claim/edit dialog capturing both assignments + secondary choice; unassigned-resolution list view (the `I?/L?` backlog)
+- [ ] Publish-back exporter: regenerate the GitHub Pages markdown from tracker data (test: golden file — import the real file, export, diff is limited to normalization)
+- [ ] README + CLAUDE.md: document the feature
+
+**v2 — Rough hours import + nudge** *(after v1 verified against the real history file; philosophy: VERY rough is fine — the product is the reminder, not the accounting)*
+- [ ] `ServiceLogEntry` model + `ServiceType` enum in the same JSON store (test: round-trip)
+- [ ] `WarhornClient`: `HttpClient` POST with token auth, `FetchEventSessions(slug)` with pagination, DTOs (test: canned JSON fixture → DTOs; HTTP error surfaces cleanly)
+- [ ] Warhorn token storage via `ICredentialStore` + `WARHORN_APPLICATION_TOKEN` env override; `UserSettings.WarhornEventSlugs` + `WarhornDisplayName` + `DefaultSessionHours` (test: settings round-trip)
+- [ ] Session → ledger mapping: filter to own GM signups, hours = `DefaultSessionHours` (use `endsAt` duration if the schema has it — check opportunistically, don't block), safety-tools bonus default, idempotent merge by `WarhornUuid` preserving user edits (test: re-import produces no dupes and keeps edits)
+- [ ] **The nudge**: on app or window open, non-blocking status hint "N sessions since last import, roughly M hours unlogged" (+ optional "~K unspent hours this document"), same spirit as the §8 update-notification hint (test: hint math from fixture ledger + session list)
+- [ ] Hours grid + rough totals + async cancellable Import button
+- [ ] Manual hours entry dialog (Posting, Dungeoncraft, Organizing, Streaming, prep) with `EvidenceUrl`
+- [ ] *(nice-to-have)* New-player candidate detection: first appearance across event history flags candidate; confirm/deny UI feeds +1/player bonus
+- [ ] *(nice-to-have)* Balance math earned − spent per version; version rollover (40-hour carryover cap, 1–4 leftover rule)
+
+**v3 — Achievements**
+- [ ] Encode ALSR achievement list as embedded JSON (3-checkbox progression, retroactive flags, reward options)
+- [ ] `AchievementClaim` model with evidence links (`WarhornUuid` or URL)
+- [ ] Auto-suggestions from import: Online DMs, Gifts All Around (birthday week), Last Minute DMs if signup timestamps are queryable
+
+---
+
+## 12) PDF export *(lowest priority)*
 - [ ] PDF export in C# (port `characters_json_to_pdf.py` or re-implement using a .NET PDF lib)
 - [ ] Page layout options and basic theming
 
 ---
 
-## 12) Archive cleanup
-When all Python functionality has been ported to C# (sections 5, 6, and 11 fully complete), delete `archive/python/` and this section.
+## 13) Archive cleanup
+When all Python functionality has been ported to C# (sections 5, 6, and 12 fully complete), delete `archive/python/` and this section.
 - [ ] Verify all Python script capabilities are covered in C# (per-character session logs, DM sessions, Markdown export, CSV export, PDF export, MSC export)
 - [ ] Delete `archive/python/`
 - [ ] Remove archive references from README.md and CLAUDE.md
