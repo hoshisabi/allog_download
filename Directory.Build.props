@@ -1,0 +1,12 @@
+<Project>
+
+  <PropertyGroup>
+    <!--
+      Allow `dotnet restore`/`build` of the net10.0-windows projects on non-Windows
+      hosts. GitHub's managed "Automatic Dependency Submission" workflow runs on
+      Ubuntu and otherwise fails with NETSDK1100. No effect on Windows builds.
+    -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>
