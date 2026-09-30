@@ -141,7 +141,7 @@
                     Margin="0,0,8,0"
                     IsEnabled="False"
                     Content="Import to _Moonsea Codex…"
-                    ToolTip="Shows this character's CSV in Explorer and opens the Moonsea Codex characters page. Use Import AL Log there and pick the CSV."
+                    ToolTip="Shows this character's CSV in Explorer and opens the Moonsea Codex characters page. Click Import there and drop in the CSV."
                     ToolTipService.ShowOnDisabled="True"
                     Click="OnMoonseaCodexClick"/>
             <Button IsDefault="True"

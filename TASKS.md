@@ -84,7 +84,9 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 - [x] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
   - The allog CSV format is already what MSC's importer expects — no transformation needed
   - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) selects the character's CSV in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
-  - User runs **Import AL Log** on the MSC characters page and picks the CSV themselves — no MSC credentials stored in the app
+  - User clicks **Import** on the MSC characters page and drops in the CSV themselves — no MSC credentials stored in the app
+  - MSC's importer (`MoonseaCodex/API` `codex/imports/csv.py`) requires the site's header lines verbatim; `CharacterCsvDownloader` writes the response body unmodified, so keep it that way
+  - Each MSC import creates a new character — re-importing the same CSV makes a duplicate
   - Button is enabled only when the character's CSV has been downloaded
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)

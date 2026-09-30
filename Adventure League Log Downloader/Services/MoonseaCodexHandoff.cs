@@ -4,11 +4,14 @@ namespace Adventure_League_Log_Downloader.Services;
 
 /// <summary>
 /// Hands a character CSV off to Moonsea Codex: selects the file in Explorer and opens the MSC characters page,
-/// where the user runs "Import AL Log" and picks the file. No MSC credentials are stored by this app.
+/// where the user clicks Import and drops in the file. No MSC credentials are stored by this app.
 /// </summary>
 public static class MoonseaCodexHandoff
 {
-    /// <summary>MSC characters page; its "Import AL Log" action accepts one adventurersleaguelog.com CSV per character.</summary>
+    /// <summary>
+    /// MSC characters page; its Import dialog accepts one adventurersleaguelog.com CSV per character and creates a new MSC character.
+    /// MSC checks the character and event header lines for an exact match, so the file must be passed on unmodified.
+    /// </summary>
     public const string ImportPageUrl = "https://moonseacodex.com/characters";
 
     /// <summary>Explorer window with <paramref name="csvPath"/> selected.</summary>
