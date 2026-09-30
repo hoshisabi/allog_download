@@ -30,7 +30,7 @@ public class SessionLogWorkbookCsvExporterTests
                 new() { Id = "xyz999", Name = "Zed Nope" },   // no CSV
             ];
 
-            var result = await SessionLogWorkbookCsvExporter.ExportAsync(jsonPath, characters);
+            var result = await SessionLogWorkbookCsvExporter.ExportAsync(jsonPath, characters, TestContext.Current.CancellationToken);
 
             Assert.Equal(1, result.CharactersUsed);
             Assert.Equal(1, result.CharactersSkippedNoCsv);
@@ -50,7 +50,7 @@ public class SessionLogWorkbookCsvExporterTests
             File.WriteAllText(Path.Combine(tempDir, "character_abc.csv"), CsvTestFixtures.StandardCharacterCsv);
 
             var result = await SessionLogWorkbookCsvExporter.ExportAsync(
-                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }]);
+                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }], TestContext.Current.CancellationToken);
 
             Assert.Equal(2, result.RowCount);
         }
@@ -68,7 +68,7 @@ public class SessionLogWorkbookCsvExporterTests
             File.WriteAllText(Path.Combine(tempDir, "character_abc.csv"), CsvTestFixtures.StandardCharacterCsv);
 
             var result = await SessionLogWorkbookCsvExporter.ExportAsync(
-                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }]);
+                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }], TestContext.Current.CancellationToken);
 
             var lines = File.ReadAllLines(result.OutputPath);
             Assert.Equal(ExpectedHeader, lines[0]);
@@ -88,7 +88,7 @@ public class SessionLogWorkbookCsvExporterTests
             File.WriteAllText(Path.Combine(tempDir, "character_abc.csv"), CsvTestFixtures.StandardCharacterCsv);
 
             var result = await SessionLogWorkbookCsvExporter.ExportAsync(
-                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }]);
+                jsonPath, [new CharacterRecord { Id = "abc", Name = "Alfie Allogson" }], TestContext.Current.CancellationToken);
 
             var lines = File.ReadAllLines(result.OutputPath);
             // lines[0] = header; lines[1] = CharacterLogEntry (sorted by name, only one character)
