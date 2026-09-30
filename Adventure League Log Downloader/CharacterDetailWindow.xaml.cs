@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Windows;
 using Adventure_League_Log_Downloader.Services;
@@ -6,6 +7,8 @@ namespace Adventure_League_Log_Downloader;
 
 public partial class CharacterDetailWindow : Window
 {
+    private readonly string? _csvPath;
+
     public CharacterDetailWindow(CharacterRecord character, string? charactersJsonPath)
     {
         InitializeComponent();
@@ -36,6 +39,9 @@ public partial class CharacterDetailWindow : Window
             return;
         }
 
+        _csvPath = csvPath;
+        MoonseaCodexButton.IsEnabled = true;
+
         var detail = CharacterCsvDetailReader.TryLoad(csvPath);
         if (!detail.CsvFileFound)
         {
@@ -64,6 +70,21 @@ public partial class CharacterDetailWindow : Window
 
     private static string OrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private void OnMoonseaCodexClick(object sender, RoutedEventArgs e)
+    {
+        if (_csvPath == null)
+            return;
+
+        try
+        {
+            MoonseaCodexHandoff.Open(_csvPath);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(this, ex.Message, "Import to Moonsea Codex", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private void OnCloseClick(object sender, RoutedEventArgs e)
     {

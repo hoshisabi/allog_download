@@ -51,12 +51,12 @@ Checked items are completed. Unchecked are pending.
 - [x] Table parsing resilient to missing/extra columns; only ID mandatory
 - [x] Save JSON output keyed by character id with camelCase properties
 - [ ] Per-page/total row counts shown in UI during run; final summary in status bar
-- [ ] Option to open output file/folder after save
+- [ ] Option to open output file/folder after save — *partial: **Options → Open Files in Explorer** selects the characters JSON on demand; nothing opens automatically after a save*
 - [x] Unit tests with small HTML fixtures: pagination discovery, row parsing edge cases (`Adventure League Log Downloader.Tests`)
-- [ ] **Unit tests for export and persistence logic** *(high priority — currently untested)*
-  - [ ] `SessionLogWorkbookCsvExporter` — given a set of character CSV fixtures, assert row count, column mapping, skip behavior for missing CSVs
-  - [ ] `CharacterCsvDetailReader` / `CharacterLogCsvReader` — round-trip parse of known CSV shapes
-  - [ ] `SettingsService` — load/save round-trip; missing file returns defaults; corrupt file does not throw
+- [x] **Unit tests for export and persistence logic**
+  - [x] `SessionLogWorkbookCsvExporter` — given a set of character CSV fixtures, assert row count, column mapping, skip behavior for missing CSVs
+  - [x] `CharacterCsvDetailReader` / `CharacterLogCsvReader` — round-trip parse of known CSV shapes
+  - [x] `SettingsService` — load/save round-trip; missing file returns defaults; corrupt file does not throw
 
 ---
 
@@ -73,7 +73,7 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 
 ## 5) Data: downloading and parsing (port from Python)
 - [ ] **Per-character session log downloads** (detailed pages per character) — *needed for full MSC/Markdown export (gold, downtime, magic items)*
-- [ ] DM session list scraping (`dmsession_list.py` → C#) — *lower priority; can follow after session logs*
+- [x] DM session list scraping (`dmsession_list.py` → C#) — `DmSessionScraper` + **DM Sessions…** window → `dm_sessions.json`
 - [ ] CSV ingest parity where Python scripts relied on downloaded CSVs as input
 
 ---
@@ -81,17 +81,22 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 ## 6) Data export formats (port from Python)
 - [x] Characters JSON export
 - [x] **Session log workbook CSV** — **File → Export session log workbook (CSV)…** → `session_log_workbook.csv` (merged view of downloaded `character_*.csv`). Reference layout: [Ken DDAL Log (Google Sheet)](https://docs.google.com/spreadsheets/d/1bqbClFX-MMgIWDKbnEEmmxBvwzO6wYSXm_ig690kojA/edit?usp=sharing); mapping and future ideas: `docs/examples/spreadsheet-ken-ddal-log.md`
-- [ ] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
-  - The allog CSV format is already what MSC's importer expects — no transformation needed
-  - Per-character: button/menu item opens the character's CSV folder in Explorer + opens the MSC import page in the default browser
-  - User drags the CSV onto the MSC page themselves — no MSC credentials stored in the app
-  - Depends on per-character CSVs being downloaded (section 5)
+- [x] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
+  - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) writes `moonseacodeximport.csv` (or ` (N)`) to Downloads, selects it in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
+  - User clicks **Import** on the MSC characters page and drops in the file themselves — no MSC credentials stored in the app
+  - MSC's importer (`MoonseaCodex/API` `codex/imports/csv.py`) splits on commas with no quote handling, so the site CSV is converted (`MoonseaCodexCsvWriter`): header lines verbatim, fields flattened. Before this, rows with multi-line notes were dropped (4 of 15 sessions on one real character)
+  - Imported character visibility: not public by default (MSC treats any non-empty `publicly_visible` as public; the flag only affects MSC's Discord bot listings)
+  - Each MSC import creates a new character — re-importing the same CSV makes a duplicate
+- [ ] MSC import visibility as a user choice — setting in Options and/or a checkbox next to the button (currently `MoonseaCodexHandoff.DefaultMakePublic = false`); wording should say it only affects MSC's Discord listings
+- [ ] MSC import level: MSC sets level from `class_and_levels` text, which is often stale (`Wizard-1` on a level-15 character; 57 of 65 real characters have no level in it). Rewrite single-class text with the site level from `characters.json` (e.g. `Wizard 15`); leave multiclass text unless its levels already sum to the site level. Extend `MoonseaCodexImportEmulator` with MSC's class parsing so tests check the level
+- [ ] Draft an upstream issue for `MoonseaCodex/API` (for Dan to review and post): parse uploads with a CSV parser instead of `splitlines()` + `split(",")`; `bool("false")` is true for `publicly_visible`; `(barbarian)(bard)` missing `|` in `parse_classes`
+  - Button is enabled only when the character's CSV has been downloaded
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)
   - Use **Scriban** for templating (`Scriban` NuGet package)
 - [ ] Characters Markdown export — per-character files, optional zip
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
-- [ ] DM sessions JSON/CSV export
+- [ ] DM sessions JSON/CSV export — *partial: JSON (`dm_sessions.json`) written by the DM Sessions window; CSV pending*
 - [ ] Per-character session JSON/CSV export
 - [ ] Option: append timestamp to filenames
 

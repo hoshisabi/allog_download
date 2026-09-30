@@ -133,12 +133,21 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Button Grid.Row="1"
-                HorizontalAlignment="Right"
-                Margin="0,14,0,0"
-                IsDefault="True"
-                IsCancel="True"
-                Content="_Close"
-                Click="OnCloseClick"/>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,14,0,0">
+            <Button x:Name="MoonseaCodexButton"
+                    Margin="0,0,8,0"
+                    IsEnabled="False"
+                    Content="Import to _Moonsea Codex…"
+                    ToolTip="Saves moonseacodeximport.csv to your Downloads folder, shows it in Explorer, and opens the Moonsea Codex characters page (sign in if asked). Click Import there and drop in the file. The character is marked as not public, which hides it from MSC's Discord listings."
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="OnMoonseaCodexClick"/>
+            <Button IsDefault="True"
+                    IsCancel="True"
+                    Content="_Close"
+                    Click="OnCloseClick"/>
+        </StackPanel>
     </Grid>
 </Window>
