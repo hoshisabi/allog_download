@@ -51,12 +51,12 @@ Checked items are completed. Unchecked are pending.
 - [x] Table parsing resilient to missing/extra columns; only ID mandatory
 - [x] Save JSON output keyed by character id with camelCase properties
 - [ ] Per-page/total row counts shown in UI during run; final summary in status bar
-- [ ] Option to open output file/folder after save
+- [ ] Option to open output file/folder after save — *partial: **Options → Open Files in Explorer** selects the characters JSON on demand; nothing opens automatically after a save*
 - [x] Unit tests with small HTML fixtures: pagination discovery, row parsing edge cases (`Adventure League Log Downloader.Tests`)
-- [ ] **Unit tests for export and persistence logic** *(high priority — currently untested)*
-  - [ ] `SessionLogWorkbookCsvExporter` — given a set of character CSV fixtures, assert row count, column mapping, skip behavior for missing CSVs
-  - [ ] `CharacterCsvDetailReader` / `CharacterLogCsvReader` — round-trip parse of known CSV shapes
-  - [ ] `SettingsService` — load/save round-trip; missing file returns defaults; corrupt file does not throw
+- [x] **Unit tests for export and persistence logic**
+  - [x] `SessionLogWorkbookCsvExporter` — given a set of character CSV fixtures, assert row count, column mapping, skip behavior for missing CSVs
+  - [x] `CharacterCsvDetailReader` / `CharacterLogCsvReader` — round-trip parse of known CSV shapes
+  - [x] `SettingsService` — load/save round-trip; missing file returns defaults; corrupt file does not throw
 
 ---
 
@@ -73,7 +73,7 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 
 ## 5) Data: downloading and parsing (port from Python)
 - [ ] **Per-character session log downloads** (detailed pages per character) — *needed for full MSC/Markdown export (gold, downtime, magic items)*
-- [ ] DM session list scraping (`dmsession_list.py` → C#) — *lower priority; can follow after session logs*
+- [x] DM session list scraping (`dmsession_list.py` → C#) — `DmSessionScraper` + **DM Sessions…** window → `dm_sessions.json`
 - [ ] CSV ingest parity where Python scripts relied on downloaded CSVs as input
 
 ---
@@ -91,7 +91,7 @@ The site's HTML structure is the only interface this tool has. When it changes, 
   - Use **Scriban** for templating (`Scriban` NuGet package)
 - [ ] Characters Markdown export — per-character files, optional zip
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
-- [ ] DM sessions JSON/CSV export
+- [ ] DM sessions JSON/CSV export — *partial: JSON (`dm_sessions.json`) written by the DM Sessions window; CSV pending*
 - [ ] Per-character session JSON/CSV export
 - [ ] Option: append timestamp to filenames
 
