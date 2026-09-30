@@ -46,6 +46,7 @@ dotnet test "Adventure League Log Downloader.Tests"
 - MSC's importer (`codex/imports/csv.py`) requires the site's CSV header lines verbatim, then splits each line on `,` with no quote handling and reads session fields by index up to 15 — a site row with multi-line notes and no comma on the first line is silently dropped. `MoonseaCodexCsvWriter` keeps the headers exact and flattens fields (line breaks → space, `,` → `;`)
 - MSC does `bool(publicly_visible)`, so any non-empty value (including `false`) means public. The writer emits empty for private, `true` for public; default is private (`MoonseaCodexHandoff.DefaultMakePublic`)
 - The public repo lags the live site (live import set level 1 where repo code computes 1 + sessions), so confirm behavior against a real import
+- `Adventure League Log Downloader.Tests/MoonseaCodexImportEmulator.cs` reimplements MSC's import rules (written from their behavior, not copied — their API is GPL-3.0) so tests assert what MSC would create from our output. Checked against MSC's actual Python on 65 real CSVs (original + converted): identical results. If MSC changes its importer, update the emulator first
 - `/characters` redirects logged-out users to `/auth/login`, and both login paths (password and Discord) come back to `/characters`
 - MSC's API accepts only its own browser session cookie (no API tokens) and its Discord OAuth runs on MSC's server, so the app can't upload on the user's behalf. One-click upload would need token access from the MSC maintainers
 

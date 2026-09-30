@@ -9,7 +9,7 @@ public class MoonseaCodexCsvWriterTests : IDisposable
 {
     // Row shapes taken from a real export that MSC partly dropped: multi-line notes whose first line has no comma,
     // multi-line notes with commas, empty quoted fields, a magic item header row, and a purchase row.
-    private const string SiteCsv = """
+    internal const string SiteCsv = """
         name,race,class_and_levels,faction,background,lifestyle,portrait_url,publicly_visible
         Scribinator-3000,autognome,Wizard-1,,"",,https://example.com/avatar.jpeg?width=155&height=255,false
         type,adventure_title,session_num,date_played,session_length_hours,player_level,xp_gained,gp_gained,downtime_gained,renown_gained,num_secret_missions,location_played,dm_name,dm_dci_number,notes,date_dmed,campaign_id

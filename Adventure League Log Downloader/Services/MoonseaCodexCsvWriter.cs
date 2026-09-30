@@ -34,7 +34,10 @@ public static class MoonseaCodexCsvWriter
         MissingFieldFound = null,
     };
 
-    private static readonly Regex LineBreakRun = new(@"\s*(?:\r\n|\r|\n)+\s*", RegexOptions.CultureInvariant | RegexOptions.Compiled);
+    // Everything Python's str.splitlines() treats as a line boundary, since MSC splits the upload that way.
+    private static readonly Regex LineBreakRun = new(
+        @"\s*(?:\r\n|[\r\n\v\f\x1C\x1D\x1E\u0085\u2028\u2029])+\s*",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     /// <summary>
     /// Converts site CSV text to MSC import text. MSC treats any non-empty <c>publicly_visible</c> value as true, so a
@@ -102,7 +105,7 @@ public static class MoonseaCodexCsvWriter
     private static List<string[]> ReadRecords(string csvText)
     {
         var records = new List<string[]>();
-        using var reader = new StringReader(csvText.TrimStart('﻿'));
+        using var reader = new StringReader(csvText.TrimStart('\uFEFF'));
         using var csv = new CsvReader(reader, ReaderConfig);
         while (csv.Read())
             records.Add(csv.Parser.Record ?? Array.Empty<string>());
