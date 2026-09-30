@@ -23,6 +23,11 @@
 # Single-file release build for distribution:
 dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 # Output: Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win-x64\
+
+# Build + run tests; also produces the Debug exe used for manual testing:
+dotnet test "Adventure League Log Downloader.Tests"
+# Debug exe: Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe
+# (older bin\Release and net9.0 folders may be stale — check timestamps)
 ```
 
 ### What's Implemented
@@ -33,6 +38,14 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 - Options dialog (configurable network delay)
 - Characters JSON export
 - Per-character CSV download (`character_{id}.csv`) and **File → Export session log workbook (CSV)…** (`session_log_workbook.csv`) — see `docs/examples/spreadsheet-ken-ddal-log.md`
+- DM session list scraping (**DM Sessions…** window → `dm_sessions.json`)
+- Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window selects the CSV in Explorer and opens `https://moonseacodex.com/characters` (`Services/MoonseaCodexHandoff.cs`)
+
+### Moonsea Codex (MSC) notes
+- MSC source: [API](https://github.com/MoonseaCodex/API) (Django backend), [WebUI](https://github.com/MoonseaCodex/WebUI) (Next.js frontend)
+- MSC's importer (`codex/imports/csv.py`) requires the site's CSV header lines verbatim; `CharacterCsvDownloader` writes the response body unmodified — keep it that way
+- `/characters` redirects logged-out users to `/auth/login`, and both login paths (password and Discord) come back to `/characters`
+- MSC's API accepts only its own browser session cookie (no API tokens) and its Discord OAuth runs on MSC's server, so the app can't upload on the user's behalf. One-click upload would need token access from the MSC maintainers
 
 ### Spreadsheet-style reference (Ken DDAL Log example)
 
@@ -40,8 +53,7 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 - **Doc:** `docs/examples/spreadsheet-ken-ddal-log.md` — column layout, site CSV mapping, workbook export mapping, changelog, and future suggestions
 
 ### What's Pending (see TASKS.md for full checklist)
-- Progress bar and cancellation during long operations
-- DM session list scraping/export
+- DM session CSV export
 - Per-character session log downloads
 - PDF export
 - MVVM refactor and DI
@@ -58,7 +70,7 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 
 ## Project Status Summary
 - C# WPF app is the primary deliverable for non-programmer users
-- DM session download/export is pending in C#
+- DM session CSV export is pending in C# (scraping and JSON are done)
 - See TASKS.md for the full checklist
 
 ## Security / credentials

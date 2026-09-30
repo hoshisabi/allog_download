@@ -10,6 +10,22 @@ The primary deliverable. A native Windows GUI app built on .NET 10.
 - Native Windows authentication via Credential Manager
 - Scrapes character lists and logs directly from AdventurersLeagueLog.com
 - Export to JSON (more formats coming)
+- Per-character CSV downloads and a merged session log workbook CSV
+- Hand a character off to [Moonsea Codex](https://moonseacodex.com/)
+
+### Moonsea Codex import
+
+Moonsea Codex (MSC) can create a character from an AdventurersLeagueLog.com CSV. To send one over:
+
+1. Download the character's CSV (the **CSV** column in the character list shows which ones are on disk).
+2. Double-click the character, then click **Import to Moonsea Codex…**. Explorer opens with the CSV selected, and your browser opens the MSC characters page (sign in if asked).
+3. On MSC, click **Import** and drop the CSV into the dialog.
+
+The app never sees your MSC login. Things to know about MSC's importer:
+
+- Each import creates a **new** character. Importing the same CSV twice makes a duplicate.
+- The CSV doesn't record everything, so MSC assumes every level-up was taken and no gold or downtime was spent, and it guesses magic item details. Check the result against your records.
+- MSC checks the CSV header lines exactly, so upload the file as downloaded, without opening and re-saving it in Excel.
 
 ### Installation
 
@@ -35,6 +51,8 @@ Output: `Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win
 ### Development
 
 Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Rider. Target framework: `.NET 10.0-windows`.
+
+From the command line, `dotnet test "Adventure League Log Downloader.Tests"` builds the app and runs the tests. The Debug build it produces is at `Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe`.
 
 ---
 
