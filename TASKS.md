@@ -81,11 +81,11 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 ## 6) Data export formats (port from Python)
 - [x] Characters JSON export
 - [x] **Session log workbook CSV** — **File → Export session log workbook (CSV)…** → `session_log_workbook.csv` (merged view of downloaded `character_*.csv`). Reference layout: [Ken DDAL Log (Google Sheet)](https://docs.google.com/spreadsheets/d/1bqbClFX-MMgIWDKbnEEmmxBvwzO6wYSXm_ig690kojA/edit?usp=sharing); mapping and future ideas: `docs/examples/spreadsheet-ken-ddal-log.md`
-- [ ] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
+- [x] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
   - The allog CSV format is already what MSC's importer expects — no transformation needed
-  - Per-character: button/menu item opens the character's CSV folder in Explorer + opens the MSC import page in the default browser
-  - User drags the CSV onto the MSC page themselves — no MSC credentials stored in the app
-  - Depends on per-character CSVs being downloaded (section 5)
+  - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) selects the character's CSV in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
+  - User runs **Import AL Log** on the MSC characters page and picks the CSV themselves — no MSC credentials stored in the app
+  - Button is enabled only when the character's CSV has been downloaded
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)
   - Use **Scriban** for templating (`Scriban` NuGet package)
