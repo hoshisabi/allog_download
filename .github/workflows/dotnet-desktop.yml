@@ -12,6 +12,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   # Use Node 24 for JS-based actions (checkout, setup-dotnet, upload-artifact); Node 20 is deprecated on runners.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
