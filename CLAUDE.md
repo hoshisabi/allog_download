@@ -25,7 +25,7 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 # Output: Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win-x64\
 
 # Build + run tests; also produces the Debug exe used for manual testing:
-dotnet test "Adventure League Log Downloader.Tests"
+dotnet test --project "Adventure League Log Downloader.Tests"
 # Debug exe: Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe
 # (older bin\Release and net9.0 folders may be stale — check timestamps)
 ```

@@ -30,7 +30,7 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task LoadAsync_MissingFile_ReturnsDefaults()
     {
-        var settings = await _service.LoadAsync();
+        var settings = await _service.LoadAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0.25, settings.DelaySeconds);
         Assert.Equal("characters.json", settings.OutputFileName);
@@ -44,7 +44,7 @@ public class SettingsServiceTests : IDisposable
     {
         File.WriteAllText(_service.SettingsPath, "}{not valid json{{");
 
-        var settings = await _service.LoadAsync();
+        var settings = await _service.LoadAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0.25, settings.DelaySeconds);
         Assert.Equal("characters.json", settings.OutputFileName);
@@ -63,7 +63,7 @@ public class SettingsServiceTests : IDisposable
         };
 
         await _service.SaveAsync(saved);
-        var loaded = await _service.LoadAsync();
+        var loaded = await _service.LoadAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(1.5, loaded.DelaySeconds);
         Assert.Equal(@"C:\test\output", loaded.OutputFolder);
@@ -85,7 +85,7 @@ public class SettingsServiceTests : IDisposable
             """;
         File.WriteAllText(_service.SettingsPath, legacyJson);
 
-        var settings = await _service.LoadAsync();
+        var settings = await _service.LoadAsync(TestContext.Current.CancellationToken);
 
         Assert.True(settings.DownloadOnlyMissingCharacterCsvs);
         Assert.True(settings.DownloadOnlyMissingDmSessionDetails);
