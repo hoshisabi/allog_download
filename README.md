@@ -25,7 +25,8 @@ The app never sees your MSC login. Things to know about MSC's importer:
 
 - Each import creates a **new** character. Importing the same CSV twice makes a duplicate.
 - The CSV doesn't record everything, so MSC assumes every level-up was taken and no gold or downtime was spent, and it guesses magic item details. Check the result against your records.
-- The character is imported as **private**.
+- The character's level comes from the class text on AdventurersLeagueLog.com (for example `Wizard-1`). If that text has no level or an out-of-date one, MSC shows level 1 or the old level; fix it on MSC after importing.
+- The app marks the character as not public. On MSC that only hides it from MSC's Discord bot listings; anyone with the character's link can still view it.
 - MSC's importer splits each line on commas and can't read multi-line fields, so the app's copy puts each session's notes on one line and turns commas into semicolons. Paragraph breaks in notes become spaces.
 - MSC skips items with "potion" or "scroll" in the name and doesn't import purchase entries.
 - Upload the `moonseacodeximport` file rather than `character_{id}.csv`, and don't re-save it in Excel: MSC checks the header lines exactly.

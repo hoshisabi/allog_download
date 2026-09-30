@@ -12,13 +12,13 @@ namespace Adventure_League_Log_Downloader.Tests;
 /// (that repo is GPL-3.0):
 /// <list type="bullet">
 /// <item><c>codex/views/imports/character.py</c> — Python <c>str.splitlines()</c> on the upload</item>
-/// <item><c>codex/imports/csv.py</c> — exact header comparison, 8-field character row, <c>bool(publicly_visible)</c>, level = 1 + session count</item>
+/// <item><c>codex/imports/csv.py</c> — exact header comparison, 8-field character row, <c>bool(publicly_visible)</c></item>
 /// <item><c>codex/imports/parse_events.py</c>, <c>adventurersleaguelogs.py</c> — <c>line.split(",")</c> with fixed field indexes; a row that is too short is skipped silently</item>
 /// <item><c>codex/imports/parse_items.py</c>, <c>items.py</c> — potion/scroll names skipped, traded items removed by name + rarity</item>
 /// <item><c>codex/imports/games.py</c> — adventure code regex, <c>int()</c>/<c>int(float())</c> conversions; a failing row is skipped silently</item>
 /// </list>
-/// Not emulated: date parsing, database writes, and item lookups against existing MSC data. The live site may run newer
-/// code than the repo (a real import set level 1 where this computes 1 + sessions).
+/// Not emulated: date parsing, database writes, item lookups against existing MSC data, and level (MSC's
+/// <c>Character.save()</c> recalculates it from the class text via <c>parse_classes.py</c>).
 /// </summary>
 internal static class MoonseaCodexImportEmulator
 {
@@ -32,7 +32,7 @@ internal static class MoonseaCodexImportEmulator
 
     internal sealed record Item(string Name, string Rarity);
 
-    internal sealed record Character(string Name, bool Public, int Level, IReadOnlyList<Game> Games, IReadOnlyList<Item> Items);
+    internal sealed record Character(string Name, bool Public, IReadOnlyList<Game> Games, IReadOnlyList<Item> Items);
 
     // Line boundaries recognized by Python's str.splitlines().
     private static readonly char[] PythonLineBreaks =
@@ -55,7 +55,6 @@ internal static class MoonseaCodexImportEmulator
         var games = new List<Game>();
         var gained = new List<Item>();
         var traded = new List<Item>();
-        var sessionEvents = 0;
 
         foreach (var line in lines.Skip(3))
         {
@@ -65,7 +64,6 @@ internal static class MoonseaCodexImportEmulator
                 case "CharacterLogEntry":
                     if (fields.Length < 16)
                         continue; // IndexError while reading date_dmed
-                    sessionEvents++;
                     if (TryCreateGame(fields, out var game))
                         games.Add(game);
                     break;
@@ -93,7 +91,7 @@ internal static class MoonseaCodexImportEmulator
         }
 
         var items = gained.Select(i => i with { Rarity = i.Rarity.Length == 0 ? "common" : i.Rarity }).ToList();
-        return new Character(charFields[0], charFields[7].Length > 0, 1 + sessionEvents, games, items);
+        return new Character(charFields[0], charFields[7].Length > 0, games, items);
     }
 
     /// <summary>Python <c>str.splitlines()</c>: <c>\r\n</c> counts once, and a trailing break adds no empty line.</summary>

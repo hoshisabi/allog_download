@@ -85,9 +85,11 @@ The site's HTML structure is the only interface this tool has. When it changes, 
   - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) writes `moonseacodeximport.csv` (or ` (N)`) to Downloads, selects it in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
   - User clicks **Import** on the MSC characters page and drops in the file themselves — no MSC credentials stored in the app
   - MSC's importer (`MoonseaCodex/API` `codex/imports/csv.py`) splits on commas with no quote handling, so the site CSV is converted (`MoonseaCodexCsvWriter`): header lines verbatim, fields flattened. Before this, rows with multi-line notes were dropped (4 of 15 sessions on one real character)
-  - Imported character visibility: private by default (MSC treats any non-empty `publicly_visible` as public)
+  - Imported character visibility: not public by default (MSC treats any non-empty `publicly_visible` as public; the flag only affects MSC's Discord bot listings)
   - Each MSC import creates a new character — re-importing the same CSV makes a duplicate
-- [ ] MSC import visibility as a user choice — setting in Options and/or a checkbox next to the button (currently `MoonseaCodexHandoff.DefaultMakePublic = false`)
+- [ ] MSC import visibility as a user choice — setting in Options and/or a checkbox next to the button (currently `MoonseaCodexHandoff.DefaultMakePublic = false`); wording should say it only affects MSC's Discord listings
+- [ ] MSC import level: MSC sets level from `class_and_levels` text, which is often stale (`Wizard-1` on a level-15 character; 57 of 65 real characters have no level in it). Rewrite single-class text with the site level from `characters.json` (e.g. `Wizard 15`); leave multiclass text unless its levels already sum to the site level. Extend `MoonseaCodexImportEmulator` with MSC's class parsing so tests check the level
+- [ ] Draft an upstream issue for `MoonseaCodex/API` (for Dan to review and post): parse uploads with a CSV parser instead of `splitlines()` + `split(",")`; `bool("false")` is true for `publicly_visible`; `(barbarian)(bard)` missing `|` in `parse_classes`
   - Button is enabled only when the character's CSV has been downloaded
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)

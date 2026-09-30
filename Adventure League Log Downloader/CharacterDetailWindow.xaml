@@ -141,7 +141,7 @@
                     Margin="0,0,8,0"
                     IsEnabled="False"
                     Content="Import to _Moonsea Codex…"
-                    ToolTip="Saves moonseacodeximport.csv to your Downloads folder, shows it in Explorer, and opens the Moonsea Codex characters page (sign in if asked). Click Import there and drop in the file. The character imports as private."
+                    ToolTip="Saves moonseacodeximport.csv to your Downloads folder, shows it in Explorer, and opens the Moonsea Codex characters page (sign in if asked). Click Import there and drop in the file. The character is marked as not public, which hides it from MSC's Discord listings."
                     ToolTipService.ShowOnDisabled="True"
                     Click="OnMoonseaCodexClick"/>
             <Button IsDefault="True"
