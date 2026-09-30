@@ -39,11 +39,13 @@ dotnet test "Adventure League Log Downloader.Tests"
 - Characters JSON export
 - Per-character CSV download (`character_{id}.csv`) and **File → Export session log workbook (CSV)…** (`session_log_workbook.csv`) — see `docs/examples/spreadsheet-ken-ddal-log.md`
 - DM session list scraping (**DM Sessions…** window → `dm_sessions.json`)
-- Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window selects the CSV in Explorer and opens `https://moonseacodex.com/characters` (`Services/MoonseaCodexHandoff.cs`)
+- Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window writes an MSC-ready `moonseacodeximport.csv` to Downloads (browser-style ` (N)` suffix if taken), selects it in Explorer, and opens `https://moonseacodex.com/characters` (`Services/MoonseaCodexHandoff.cs`, `MoonseaCodexCsvWriter.cs`)
 
 ### Moonsea Codex (MSC) notes
 - MSC source: [API](https://github.com/MoonseaCodex/API) (Django backend), [WebUI](https://github.com/MoonseaCodex/WebUI) (Next.js frontend)
-- MSC's importer (`codex/imports/csv.py`) requires the site's CSV header lines verbatim; `CharacterCsvDownloader` writes the response body unmodified — keep it that way
+- MSC's importer (`codex/imports/csv.py`) requires the site's CSV header lines verbatim, then splits each line on `,` with no quote handling and reads session fields by index up to 15 — a site row with multi-line notes and no comma on the first line is silently dropped. `MoonseaCodexCsvWriter` keeps the headers exact and flattens fields (line breaks → space, `,` → `;`)
+- MSC does `bool(publicly_visible)`, so any non-empty value (including `false`) means public. The writer emits empty for private, `true` for public; default is private (`MoonseaCodexHandoff.DefaultMakePublic`)
+- The public repo lags the live site (live import set level 1 where repo code computes 1 + sessions), so confirm behavior against a real import
 - `/characters` redirects logged-out users to `/auth/login`, and both login paths (password and Discord) come back to `/characters`
 - MSC's API accepts only its own browser session cookie (no API tokens) and its Discord OAuth runs on MSC's server, so the app can't upload on the user's behalf. One-click upload would need token access from the MSC maintainers
 

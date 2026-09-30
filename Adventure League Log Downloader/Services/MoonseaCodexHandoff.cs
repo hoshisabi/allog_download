@@ -3,16 +3,19 @@ using System.Diagnostics;
 namespace Adventure_League_Log_Downloader.Services;
 
 /// <summary>
-/// Hands a character CSV off to Moonsea Codex: selects the file in Explorer and opens the MSC characters page,
-/// where the user clicks Import and drops in the file. No MSC credentials are stored by this app.
+/// Hands a character off to Moonsea Codex: writes an MSC-ready copy of the character CSV to Downloads
+/// (<see cref="MoonseaCodexCsvWriter"/>), selects it in Explorer, and opens the MSC characters page, where the user clicks
+/// Import and drops in the file. No MSC credentials are stored by this app.
 /// </summary>
 public static class MoonseaCodexHandoff
 {
     /// <summary>
     /// MSC characters page; its Import dialog accepts one adventurersleaguelog.com CSV per character and creates a new MSC character.
-    /// MSC checks the character and event header lines for an exact match, so the file must be passed on unmodified.
     /// </summary>
     public const string ImportPageUrl = "https://moonseacodex.com/characters";
+
+    /// <summary>Visibility of the imported MSC character until this becomes a user setting.</summary>
+    public const bool DefaultMakePublic = false;
 
     /// <summary>Explorer window with <paramref name="csvPath"/> selected.</summary>
     public static ProcessStartInfo BuildRevealCsvStartInfo(string csvPath) => new()
@@ -25,9 +28,12 @@ public static class MoonseaCodexHandoff
     /// <summary>MSC import page in the default browser.</summary>
     public static ProcessStartInfo BuildImportPageStartInfo() => new(ImportPageUrl) { UseShellExecute = true };
 
-    public static void Open(string csvPath)
+    /// <summary>Writes the MSC import file for <paramref name="siteCsvPath"/>, reveals it, and opens MSC. Returns the path written.</summary>
+    public static string Open(string siteCsvPath, bool makePublic = DefaultMakePublic)
     {
-        Process.Start(BuildRevealCsvStartInfo(csvPath));
+        var importPath = MoonseaCodexCsvWriter.WriteImportFile(siteCsvPath, DownloadsFolder.GetPath(), makePublic);
+        Process.Start(BuildRevealCsvStartInfo(importPath));
         Process.Start(BuildImportPageStartInfo());
+        return importPath;
     }
 }

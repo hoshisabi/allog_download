@@ -82,11 +82,12 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 - [x] Characters JSON export
 - [x] **Session log workbook CSV** — **File → Export session log workbook (CSV)…** → `session_log_workbook.csv` (merged view of downloaded `character_*.csv`). Reference layout: [Ken DDAL Log (Google Sheet)](https://docs.google.com/spreadsheets/d/1bqbClFX-MMgIWDKbnEEmmxBvwzO6wYSXm_ig690kojA/edit?usp=sharing); mapping and future ideas: `docs/examples/spreadsheet-ken-ddal-log.md`
 - [x] **Moonsea Codex (MSC) integration** — *FIRST EXPORT TARGET*
-  - The allog CSV format is already what MSC's importer expects — no transformation needed
-  - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) selects the character's CSV in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
-  - User clicks **Import** on the MSC characters page and drops in the CSV themselves — no MSC credentials stored in the app
-  - MSC's importer (`MoonseaCodex/API` `codex/imports/csv.py`) requires the site's header lines verbatim; `CharacterCsvDownloader` writes the response body unmodified, so keep it that way
+  - Per-character: **Import to Moonsea Codex…** in the character detail window (double-click a row) writes `moonseacodeximport.csv` (or ` (N)`) to Downloads, selects it in Explorer + opens `https://moonseacodex.com/characters` in the default browser (`MoonseaCodexHandoff`)
+  - User clicks **Import** on the MSC characters page and drops in the file themselves — no MSC credentials stored in the app
+  - MSC's importer (`MoonseaCodex/API` `codex/imports/csv.py`) splits on commas with no quote handling, so the site CSV is converted (`MoonseaCodexCsvWriter`): header lines verbatim, fields flattened. Before this, rows with multi-line notes were dropped (4 of 15 sessions on one real character)
+  - Imported character visibility: private by default (MSC treats any non-empty `publicly_visible` as public)
   - Each MSC import creates a new character — re-importing the same CSV makes a duplicate
+- [ ] MSC import visibility as a user choice — setting in Options and/or a checkbox next to the button (currently `MoonseaCodexHandoff.DefaultMakePublic = false`)
   - Button is enabled only when the character's CSV has been downloaded
 - [ ] Characters Markdown export — single file (`json_to_markdown.py` → C#)
   - Reference template: `docs/examples/markdown-export-notion-template.md` (richer format, preferred over Python version)

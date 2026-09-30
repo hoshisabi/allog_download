@@ -18,14 +18,17 @@ The primary deliverable. A native Windows GUI app built on .NET 10.
 Moonsea Codex (MSC) can create a character from an AdventurersLeagueLog.com CSV. To send one over:
 
 1. Download the character's CSV (the **CSV** column in the character list shows which ones are on disk).
-2. Double-click the character, then click **Import to Moonsea Codex…**. Explorer opens with the CSV selected, and your browser opens the MSC characters page (sign in if asked).
-3. On MSC, click **Import** and drop the CSV into the dialog.
+2. Double-click the character, then click **Import to Moonsea Codex…**. The app saves `moonseacodeximport.csv` to your Downloads folder (`moonseacodeximport (1).csv` and so on if that name is taken), Explorer opens with it selected, and your browser opens the MSC characters page (sign in if asked).
+3. On MSC, click **Import** and drop the file into the dialog.
 
 The app never sees your MSC login. Things to know about MSC's importer:
 
 - Each import creates a **new** character. Importing the same CSV twice makes a duplicate.
 - The CSV doesn't record everything, so MSC assumes every level-up was taken and no gold or downtime was spent, and it guesses magic item details. Check the result against your records.
-- MSC checks the CSV header lines exactly, so upload the file as downloaded, without opening and re-saving it in Excel.
+- The character is imported as **private**.
+- MSC's importer splits each line on commas and can't read multi-line fields, so the app's copy puts each session's notes on one line and turns commas into semicolons. Paragraph breaks in notes become spaces.
+- MSC skips items with "potion" or "scroll" in the name and doesn't import purchase entries.
+- Upload the `moonseacodeximport` file rather than `character_{id}.csv`, and don't re-save it in Excel: MSC checks the header lines exactly.
 
 ### Installation
 
