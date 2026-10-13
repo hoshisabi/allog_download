@@ -362,88 +362,38 @@ public partial class MainWindow : Window
         CharactersPreviewSummary.Text = "Logging in…";
         StatusText.Text = "Logging in…";
 
-        var reportProgress =
-            (IProgress<CharacterScrapeReport>)new System.Progress<CharacterScrapeReport>(OnCharacterOperationProgress);
+        var reportProgress = (IProgress<CharacterScrapeReport>)new System.Progress<CharacterScrapeReport>(report =>
+        {
+            OnCharacterOperationProgress(report);
+            if (report.Phase == CharacterScrapePhase.DownloadingCsvs)
+                StatusText.Text = "Downloading CSV files…";
+            else if (report.Phase == CharacterScrapePhase.Saving)
+                StatusText.Text = "Saving character list…";
+        });
 
         try
         {
-            var auth = new AdventurersLeagueAuth(username, password);
-            var scraper = new CharacterScraper(auth);
-            var ct = GetOperationCancellationToken();
-
-            var results = await scraper.ScrapeAsync(_settings.DelaySeconds, reportProgress, ct);
-
-            var sorted = results.Values.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            var dataDir = CharacterCsvDownloader.GetCharacterDataDirectory(outputPath);
             var skipCsvs = SkipCharacterCsvsCheckBox.IsChecked == true;
-            var onlyMissing = !skipCsvs && OnlyMissingCharacterCsvsCheckBox.IsChecked == true;
-            List<string> idsForCsv;
-            if (skipCsvs)
-                idsForCsv = [];
-            else if (onlyMissing)
-                idsForCsv = sorted.Where(c => !CharacterCsvLocator.LocalCsvExists(outputPath, c.Id)).Select(c => c.Id).ToList();
-            else
-                idsForCsv = sorted.Select(c => c.Id).ToList();
+            var csvMode = skipCsvs
+                ? CharacterCsvMode.Skip
+                : OnlyMissingCharacterCsvsCheckBox.IsChecked == true
+                    ? CharacterCsvMode.OnlyMissing
+                    : CharacterCsvMode.All;
 
-            var csvFailed = 0;
-            if (idsForCsv.Count > 0)
-            {
-                StatusText.Text = "Downloading CSV files…";
-                var csvDownloader = new CharacterCsvDownloader(auth);
-                csvFailed = await csvDownloader.DownloadAllAsync(idsForCsv, dataDir, _settings.DelaySeconds, reportProgress, sorted, ct);
-            }
-
-            var previousById = await CharacterJsonFile.TryLoadDictionaryAsync(outputPath, ct);
-            foreach (var c in sorted)
-            {
-                CharacterLogCsvReader.ApplyLatestSessionFromCsvIfPresent(c, outputPath);
-                if (!string.IsNullOrWhiteSpace(c.LastSessionPlayed))
-                    continue;
-                if (previousById != null && previousById.TryGetValue(c.Id, out var prev) && !string.IsNullOrWhiteSpace(prev.LastSessionPlayed))
-                    c.LastSessionPlayed = prev.LastSessionPlayed;
-            }
-
-            CharacterCsvLocator.RefreshLocalCsvFlags(outputPath, sorted);
-
-            reportProgress.Report(new CharacterScrapeReport
-            {
-                Phase = CharacterScrapePhase.Saving,
-                CharacterCount = sorted.Count,
-                Characters = sorted,
-                Detail = "Saving character list…"
-            });
-            StatusText.Text = "Saving character list…";
-
-            var dictToSave = sorted.ToDictionary(c => c.Id, c => c);
-            await CharacterJsonFile.SaveAsync(outputPath, dictToSave, ct);
+            var result = await CharacterListDownload.RunAsync(
+                new AdventurersLeagueAuth(username, password),
+                new CharacterListDownloadOptions(outputPath, _settings.DelaySeconds, csvMode),
+                reportProgress,
+                GetOperationCancellationToken());
 
             _settings.LastWebsiteDownloadUtc = DateTimeOffset.UtcNow;
             await _settingsService.SaveAsync(_settings);
             RefreshLastWebsiteDownloadDisplay();
 
-            var csvOk = idsForCsv.Count - csvFailed;
-            var csvDetail = skipCsvs
-                ? "CSV downloads skipped (list only)."
-                : idsForCsv.Count == 0
-                    ? onlyMissing
-                        ? "All character CSV files were already present; no CSV downloads."
-                        : "No characters to download CSVs for."
-                    : csvFailed == 0
-                        ? $"Downloaded {csvOk} character CSV file(s) next to your character list."
-                        : $"Downloaded {csvOk} CSV file(s); {csvFailed} failed (see status text). CSVs are next to your character list.";
-
-            reportProgress.Report(new CharacterScrapeReport
-            {
-                Phase = CharacterScrapePhase.Complete,
-                CharacterCount = sorted.Count,
-                Characters = sorted,
-                Detail = $"Saved {Path.GetFileName(outputPath)}. {csvDetail}"
-            });
-
             StatusText.Text = "Done";
-            var successBody = skipCsvs || idsForCsv.Count == 0
-                ? $"Character list saved to:\n{outputPath}\n\n{csvDetail}"
-                : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({csvOk} ok{(csvFailed > 0 ? $", {csvFailed} failed" : "")}):\n{dataDir}";
+            var successBody = result.CsvRequested == 0
+                ? $"Character list saved to:\n{outputPath}\n\n{result.CsvSummary}"
+                : $"Character list saved to:\n{outputPath}\n\nCharacter CSVs ({result.CsvSucceeded} ok{(result.CsvFailed > 0 ? $", {result.CsvFailed} failed" : "")}):\n{result.DataDirectory}";
             System.Windows.MessageBox.Show(this, successBody, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (OperationCanceledException)
