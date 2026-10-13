@@ -1,4 +1,5 @@
-# Build and publish the WPF app (win-x64).
+# Build and publish the WPF app (win-x64), and run the tests on Windows and Linux.
+# The Linux job builds only Allog.Core + tests, so it also catches Windows-only dependencies reaching Core.
 # Artifacts (main / manual only):
 #   - *-framework: needs .NET 10 Windows Desktop Runtime installed.
 #   - *-selfcontained: all-in-one single-folder build (larger; no separate runtime install).
@@ -21,6 +22,7 @@ env:
   DOTNET_VERSION: "10.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
+  TESTS_PATH: Adventure League Log Downloader.Tests
   PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64
   PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64-selfcontained
 
@@ -39,6 +41,9 @@ jobs:
 
       - name: Restore
         run: dotnet restore "${{ env.SLN_PATH }}"
+
+      - name: Test
+        run: dotnet test --project "${{ env.TESTS_PATH }}" -c Release
 
       - name: Build (pull requests)
         if: github.event_name == 'pull_request'
@@ -65,3 +70,18 @@ jobs:
         with:
           name: AdventurersLeagueLogDownloader-win-x64-selfcontained
           path: ${{ env.PUBLISH_OUT_SELFCONTAINED }}
+
+  test-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Test
+        run: dotnet test --project "${{ env.TESTS_PATH }}" -c Release
