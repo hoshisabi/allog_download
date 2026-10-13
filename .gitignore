@@ -4,6 +4,7 @@ out/
 bin/
 .vs/
 .idea/
+*.code-workspace
 obj/
 build/
 dist/
