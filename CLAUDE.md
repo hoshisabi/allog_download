@@ -30,6 +30,11 @@ dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 # Tests run natively on Windows, macOS, and Linux; WindowsCredentialStoreTests are skipped off Windows.
 dotnet build "Adventure League Log Downloader.sln"
 dotnet test --project "Adventure League Log Downloader.Tests"
+
+# CLI (`Allog.Cli`, executable `allog`; Windows, macOS, Linux):
+dotnet run --project Allog.Cli -- characters --help
+# Self-contained single file for a Linux user (no .NET install needed):
+dotnet publish Allog.Cli -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o out/allog-linux-x64
 # Debug exe: Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe
 # (older bin\Release and net9.0 folders may be stale — check timestamps)
 ```
@@ -37,7 +42,8 @@ dotnet test --project "Adventure League Log Downloader.Tests"
 ### What's Implemented
 - Auth with CSRF/cookie handling and userId discovery
 - Character list scraping with robust pagination
-- Windows Credential Manager for saved credentials
+- Windows Credential Manager for saved credentials; file store (obfuscated) on other OSes, picked by `CredentialStores.ForCurrentOS`
+- CLI `allog characters` (`Allog.Cli`): sign in, download the character list + CSVs, save `characters.json`; same settings and saved login as the desktop app. `allog login` checks a login on the site and saves it (prompting for anything not given); `allog logout` removes it. Login from `--username` + `--password-file` / `--password`, `--env-file` (`ALLOG_USERNAME` / `ALLOG_PASSWORD` keys), the same environment variables, or the saved login. In a terminal, progress updates one line in place. Exit codes: 0 ok, 1 error, 2 usage / no login, 3 some CSVs failed, 130 cancelled
 - Settings persistence to `%AppData%/AllogDownloader/settings.json`
 - Options dialog (configurable network delay)
 - Characters JSON export

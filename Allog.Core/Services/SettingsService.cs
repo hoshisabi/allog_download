@@ -30,7 +30,7 @@ public sealed class SettingsService : ISettingsService
     public SettingsService(string? company = null, string? product = null)
     {
         // e.g., %AppData%\AllogDownloader
-        var baseAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var baseAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
         var folderName = string.IsNullOrWhiteSpace(product) ? "AllogDownloader" : product;
         if (!string.IsNullOrWhiteSpace(company))
             _appFolder = Path.Combine(baseAppData, company, folderName);
