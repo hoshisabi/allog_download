@@ -8,7 +8,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         
-        <Version>0.2.0</Version>
+        <!-- Local builds only. Release builds get the version from the git tag (release-wpf.yml). -->
+        <Version>0.0.0-dev</Version>
         <Authors>Adventurers League Community</Authors>
         <Company>Adventurers League</Company>
         <Description>A tool to download character logs from Adventurers League.</Description>

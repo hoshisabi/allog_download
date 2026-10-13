@@ -1,5 +1,8 @@
-# On push of a semver-style tag (v*.*.*), publish WPF win-x64 builds and attach ZIPs to that tag's GitHub Release.
+# On push of a semver-style tag (v*.*.*), test, publish WPF win-x64 builds, and attach them to that tag's GitHub Release.
 # Creates the release if it does not exist; enables GitHub-generated release notes.
+# The app version comes from the tag (v0.3.0 -> 0.3.0); the csproj <Version> is for local builds only.
+# AdventurersLeagueLogDownloader-win-x64.exe has the same name in every release, so this link always gets the newest:
+#   https://github.com/hoshisabi/allog_download/releases/latest/download/AdventurersLeagueLogDownloader-win-x64.exe
 
 name: WPF release
 
@@ -22,6 +25,7 @@ env:
   DOTNET_VERSION: "10.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
+  TEST_PROJECT: Adventure League Log Downloader.Tests
   PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64
   PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64-selfcontained
 
@@ -41,14 +45,23 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Version from tag
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG -replace '^v', ''
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Restore
         run: dotnet restore "${{ env.SLN_PATH }}"
 
+      - name: Test
+        run: dotnet test --project "${{ env.TEST_PROJECT }}" -c Release --no-restore
+
       - name: Publish (framework-dependent)
-        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=FolderProfile --no-restore
+        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=FolderProfile -p:Version=${{ env.APP_VERSION }} --no-restore
 
       - name: Publish (self-contained)
-        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=SelfContainedProfile --no-restore
+        run: dotnet publish "${{ env.CSPROJ_PATH }}" -c Release -p:PublishProfile=SelfContainedProfile -p:Version=${{ env.APP_VERSION }} --no-restore
 
       - name: Zip publish outputs
         shell: pwsh
@@ -63,6 +76,7 @@ jobs:
           Compress-Archive -Path (Join-Path $fw '*') -DestinationPath $zipFw -Force
           Compress-Archive -Path (Join-Path $sc '*') -DestinationPath $zipSc -Force
           Copy-Item (Join-Path $sc 'Adventure League Log Downloader.exe') (Join-Path $ws "AdventurersLeagueLogDownloader-$tag.exe")
+          Copy-Item (Join-Path $sc 'Adventure League Log Downloader.exe') (Join-Path $ws "AdventurersLeagueLogDownloader-win-x64.exe")
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v3
@@ -71,5 +85,6 @@ jobs:
           generate_release_notes: true
           files: |
             AdventurersLeagueLogDownloader-${{ env.RELEASE_TAG }}.exe
+            AdventurersLeagueLogDownloader-win-x64.exe
             AdventurersLeagueLogDownloader-${{ env.RELEASE_TAG }}-win-x64-framework.zip
             AdventurersLeagueLogDownloader-${{ env.RELEASE_TAG }}-win-x64-selfcontained.zip

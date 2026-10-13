@@ -22,7 +22,7 @@ env:
   DOTNET_VERSION: "10.0.x"
   SLN_PATH: Adventure League Log Downloader.sln
   CSPROJ_PATH: Adventure League Log Downloader/Adventure League Log Downloader.csproj
-  TESTS_PATH: Adventure League Log Downloader.Tests
+  TEST_PROJECT: Adventure League Log Downloader.Tests
   PUBLISH_OUT_FRAMEWORK: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64
   PUBLISH_OUT_SELFCONTAINED: Adventure League Log Downloader/bin/Release/net10.0-windows/publish/win-x64-selfcontained
 
@@ -43,7 +43,7 @@ jobs:
         run: dotnet restore "${{ env.SLN_PATH }}"
 
       - name: Test
-        run: dotnet test --project "${{ env.TESTS_PATH }}" -c Release
+        run: dotnet test --project "${{ env.TEST_PROJECT }}" -c Release --no-restore
 
       - name: Build (pull requests)
         if: github.event_name == 'pull_request'
@@ -84,4 +84,4 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Test
-        run: dotnet test --project "${{ env.TESTS_PATH }}" -c Release
+        run: dotnet test --project "${{ env.TEST_PROJECT }}" -c Release
