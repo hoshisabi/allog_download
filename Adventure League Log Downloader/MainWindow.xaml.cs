@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -23,6 +22,7 @@ public partial class MainWindow : Window
     private readonly ISettingsService _settingsService = new SettingsService();
     private UserSettings _settings = UserSettings.CreateDefaults();
     private readonly ICredentialStore _credentialStore = new WindowsCredentialStore();
+    private readonly IPlatformShell _shell = PlatformShell.ForCurrentOS();
     private readonly ObservableCollection<CharacterRecord> _characterPreview = new();
 
     private string _accountUsername = string.Empty;
@@ -276,20 +276,11 @@ public partial class MainWindow : Window
 
             if (!string.IsNullOrWhiteSpace(jsonPath) && File.Exists(jsonPath))
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = $"/select,\"{jsonPath}\"",
-                    UseShellExecute = true
-                });
+                _shell.RevealFile(jsonPath);
             }
             else
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = folder,
-                    UseShellExecute = true
-                });
+                _shell.OpenFolder(folder);
             }
         }
         catch (Exception ex)
@@ -304,13 +295,7 @@ public partial class MainWindow : Window
         {
             var folder = Path.GetDirectoryName(_settingsService.SettingsPath);
             if (!string.IsNullOrWhiteSpace(folder))
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = folder,
-                    UseShellExecute = true
-                });
-            }
+                _shell.OpenFolder(folder);
         }
         catch (Exception ex)
         {
