@@ -78,7 +78,7 @@ public partial class CharacterDetailWindow : Window
 
         try
         {
-            MoonseaCodexHandoff.Open(_csvPath);
+            MoonseaCodexHandoff.Open(PlatformShell.ForCurrentOS(), _csvPath);
         }
         catch (Exception ex)
         {
