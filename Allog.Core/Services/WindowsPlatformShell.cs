@@ -8,6 +8,7 @@ namespace Adventure_League_Log_Downloader.Services;
 /// <summary>Explorer, the shell's default handlers, and the shell's known Downloads folder.</summary>
 public sealed class WindowsPlatformShell : IPlatformShell
 {
+    // Windows GUID for the Downloads folder (FOLDERID_Downloads in KnownFolders.h).
     private static readonly Guid FolderIdDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
 
     /// <summary>
