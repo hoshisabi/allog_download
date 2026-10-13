@@ -14,7 +14,8 @@
 
 ### Tech Stack
 - .NET 10.0-windows, WPF
-- NuGet: `HtmlAgilityPack` (HTML parsing), `CredentialManagement` (Windows Credential Manager)
+- NuGet: `HtmlAgilityPack` (HTML parsing), `CsvHelper`
+- Windows Credential Manager via advapi32 P/Invoke (`Services/WindowsCredentialStore.cs`)
 - IDE: Visual Studio 2022 or JetBrains Rider
 
 ### Build & Publish

@@ -17,7 +17,7 @@ This document records **product and engineering decisions** for how Adventurers 
 
 ### Windows WPF (current)
 
-- **Windows Credential Manager** may continue to be used via the existing `CredentialManagement`-based path for “remember me.” This is separate from settings JSON.
+- **Windows Credential Manager** may continue to be used via `WindowsCredentialStore` (advapi32 P/Invoke; same entry name the earlier `CredentialManagement`-based version used) for “remember me.” This is separate from settings JSON.
 - **Future consolidation:** we may also store an **obfuscated** password alongside other settings for portability or a single code path; that is a product decision when Core/CLI work lands.
 
 ### Portable console (CLI / TUI / cross-platform)
