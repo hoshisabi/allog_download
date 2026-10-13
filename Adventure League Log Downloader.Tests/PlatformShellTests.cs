@@ -7,7 +7,7 @@ public class PlatformShellTests
 {
     public static bool IsWindows => OperatingSystem.IsWindows();
 
-    public static bool IsNotWindows => !OperatingSystem.IsWindows();
+    public static bool IsLinuxOrMacOS => OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
 
     [Fact(Skip = "Windows only.", SkipUnless = nameof(IsWindows))]
     public void ForCurrentOS_OnWindows_ReturnsWindowsShell()
@@ -15,9 +15,9 @@ public class PlatformShellTests
         Assert.IsType<WindowsPlatformShell>(PlatformShell.ForCurrentOS());
     }
 
-    [Fact(Skip = "Off Windows only.", SkipUnless = nameof(IsNotWindows))]
-    public void ForCurrentOS_OffWindows_IsNotSupportedYet()
+    [Fact(Skip = "Linux and macOS only.", SkipUnless = nameof(IsLinuxOrMacOS))]
+    public void ForCurrentOS_OnLinuxOrMacOS_ReturnsUnixShell()
     {
-        Assert.Throws<PlatformNotSupportedException>(() => PlatformShell.ForCurrentOS());
+        Assert.IsType<UnixPlatformShell>(PlatformShell.ForCurrentOS());
     }
 }
