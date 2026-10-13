@@ -22,7 +22,7 @@ What was added or changed in this project in relation to this spreadsheet style:
 | Item | Detail |
 | ---- | ------ |
 | **`session_log_workbook.csv` export** | WPF: **File → Export session log workbook (CSV)…** merges all local `character_{id}.csv` files next to `characters.json` into one workbook-style CSV. |
-| **Implementation** | `Adventure League Log Downloader/Services/SessionLogWorkbookCsvExporter.cs` — parses site CSV sections, maps columns, attaches interleaved `MAGIC ITEM` rows to the preceding `*LogEntry` row. |
+| **Implementation** | `Allog.Core/Services/SessionLogWorkbookCsvExporter.cs` — parses site CSV sections, maps columns, attaches interleaved `MAGIC ITEM` rows to the preceding `*LogEntry` row. |
 | **Date parsing reuse** | `CharacterLogCsvReader.TryParseSiteCsvTimestamp` and `FormatSiteDateForWorkbook` — shared parsing/formatting for CSV timestamps. |
 | **Documentation** | This file documents the Ken example layout, the real site CSV layout, the workbook column mapping, gaps vs. the Ken sheet, and suggestions below. |
 

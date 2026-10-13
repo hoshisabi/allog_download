@@ -41,7 +41,7 @@ Checked items are completed. Unchecked are pending.
 - [x] Verify login and discover `userId` from returned HTML
 - [x] Wire Run to authenticate using supplied credentials
 - [x] "Forget credentials" action in menu; explanatory tooltip/help text *(Options → Forget stored credentials)*
-- [ ] Cross-platform credential store abstraction — *WINDOWS ONLY FOR MVP*; macOS Keychain and Linux Secret Service can be added in future iterations
+- [ ] Cross-platform credential store — see **7b** A7 (Credential Manager / Keychain / Secret Service, with headless fallbacks)
 
 ---
 
@@ -110,79 +110,110 @@ The site's HTML structure is the only interface this tool has. When it changes, 
 
 ---
 
-## 7b) Shared Core, console host (CLI + TUI), and WPF *(cross-platform path)*
+## 7b) Shared Core, CLI, and cross-platform GUI *(cross-platform path)*
 
-**Intent:** Keep the Windows **WPF** app as the primary “full GUI” experience. Add a **`net10.0` console** program that ships on **Windows, macOS, and Linux** and shares all site logic with WPF via a **`net10.0` class library**. The console host combines:
-
-- **CLI** — subcommands and flags for scripting, automation, and advanced users; suitable for CI and `cron`; exits non-zero on failure; no prompts when required arguments are supplied.
-- **TUI** — an interactive, full-terminal guided flow (menus, forms, progress) for users who are fine in a terminal but want *discovery* and feedback without memorizing flags. Useful on **Windows** (Windows Terminal, etc.) as well as Unix.
+**Decision (2026-10-13):** Linux and macOS users get a native GUI. At least one current user is on Linux. Wine works in the meantime (on blueglow, 2026-10-13: the test exe passes 57/57 under Wine 10 and the WPF main window draws under Xvfb), so this isn't urgent. The design is a **Core library** that a **CLI** and an **Avalonia GUI** both call. Site logic lives in one place and every host is a thin shell over it.
 
 **Target solution layout**
 
 | Project | TFM | Role |
 |--------|-----|------|
-| `Allog.Core` *(name TBD)* | `net10.0` | Auth, scrapers, settings models/paths, file I/O contracts; `IProgress<T>` + `CancellationToken`; **no** WPF/WinForms/Console UI packages |
-| `Adventure League Log Downloader` | `net10.0-windows` | WPF + Windows credential store + folder picker; references Core only for site logic |
-| `Allog.Console` *(name TBD)* | `net10.0` | References Core; hosts **System.CommandLine** (or equivalent) root command with subcommands, e.g. `download`, `auth-test`, … and **`tui`** (or make `tui` the default when no subcommand is given — decide at implementation time) |
+| `Allog.Core` *(name TBD)* | `net10.0` | Auth, scrapers, CSV/JSON/MSC/workbook export, settings, use-case façade; `IProgress<T>` + `CancellationToken`; **no** UI packages and **no** Windows APIs |
+| `Allog.Cli` *(name TBD)* | `net10.0` | **System.CommandLine** verbs over the Core façade; scripting, `cron`, non-zero exit on failure, no prompts when arguments are supplied |
+| `Allog.Desktop` *(name TBD)* | `net10.0` | **Avalonia** GUI over the Core façade; Windows, macOS, Linux |
+| `Adventure League Log Downloader` | `net10.0-windows` | Existing WPF app; moves onto Core during Phase A; retirement decided in Phase C |
+| `Adventure League Log Downloader.Tests` | `net10.0` | Tests Core only, so `dotnet test` runs natively on Linux and macOS |
 
-**TUI implementation note:** Start with **[Spectre.Console](https://spectreconsole.net/)** — prompts, tables, live progress, and layouts are quick to align with existing WPF flows and behave well across Windows Terminal and Unix terminals. If we later need classic multi-pane terminal UI (separate windows, mouse regions), evaluate **[Terminal.Gui](https://github.com/gui-cs/Terminal.Gui)** as a second phase or for specific screens only.
+**OS-specific code** sits behind two interfaces, each with one implementation per OS:
+- `ICredentialStore` *(exists)* — per-OS implementations in Core; approach pending the A7b decision below (`Devlooped.CredentialManager` needs Git installed, so it's out as packaged). Replaces `CredentialManagement` (a .NET Framework package; source of the NU1701 warning; on plain `net10.0` it fails to load without `System.Security.Permissions`).
+- `IPlatformShell` *(new)* — `GetDownloadsFolder` (Windows: `SHGetKnownFolderPath`; Linux: `xdg-user-dir DOWNLOAD`, falling back to `~/Downloads`; macOS: `~/Downloads`), `RevealFile` (Windows: `explorer /select,`; macOS: `open -R`; Linux: `xdg-open` on the containing folder), `OpenUrl` (shell execute / `open` / `xdg-open`).
 
-**Roadmap order (hosts)**  
-1) **Headless CLI** first — cross-platform, scripting, minimal UX surface.  
-2) **TUI** second — same `Allog.Console` binary, interactive mode when Core + CLI patterns are stable.  
-3) **New product features** (including exports, session logs, MSC, Markdown, etc.) can land **mostly in Core** as they are implemented; **WPF can gain those features between TUI and any full GUI rework** so Windows users are not blocked.  
-4) **Full GUI rework** (cross-platform replacement for WPF) **last** — only after Core stabilizes and hosts are proven.
+Windows-only code as of 2026-10-13: `Allog.Core/Services/DownloadsFolder.cs`, `Allog.Core/Services/MoonseaCodexHandoff.cs:23`, `Allog.Core/Services/WindowsCredentialStore.cs`, `MainWindow.xaml.cs:279-308`, `AboutDialog.xaml.cs:66`. The rest of `Services/` compiles for `net10.0` as is (to be confirmed by A2's build). The WPF project sets `UseWindowsForms`, which adds global usings for `System.Windows.Forms` / `System.Drawing`; if a Services file depends on one of them, A2's build will show it.
 
-**Credential / config on console (CLI + later TUI)**  
-Priority: **environment variables** and **explicit CLI arguments** for non-interactive use. **Optional persistence:** settings under app data / home (same family as `settings.json`); password stored only as **obfuscation** for convenience — **not** encryption; user copy must say **“obfuscated password,”** never **“encrypted.”** Users who want no local secret leave **“store credentials”** unchecked. See **`SECURITY.md`** for the full decision record, threat model, and WPF vs portable notes. WPF may keep **Windows Credential Manager** for now; **no** Keychain / Secret Service in the first cross-platform wave.
+**Credential posture (2026-10-13):** the site password is low importance. The aim is to give users options: OS secure storage where it exists, plainer fallbacks where it doesn't, and env vars / flags for scripts. If a more secure option comes along later, add it. User-facing text describes each option as it is (a `plaintext` store is not "encrypted").
 
-**Exports vs CLI/TUI timing**  
-Do **not** block the first CLI on “all exports complete.” Ship CLI verbs for whatever Core already does well (e.g. auth + character list → JSON). Add **new CLI/TUI commands as export pipelines move into Core** (Markdown, zip, MSC helpers, etc.). Several heavier exports depend on **per-character session data** (sections 5–6 above); sequencing those in Core naturally extends the same façade the CLI and TUI call, with little throwaway work.
+**Credential lookup for CLI**, in order: (1) `--password` / `--password-file` / environment variable; (2) the configured store; (3) exit non-zero with a message listing the options. `allog login` saves to the configured store ("log in once").
 
-**Distribution:** Publish **`Allog.Console`** self-contained per RID (`win-x64`, `osx-arm64`, `osx-x64`, `linux-x64`). WPF publish profile stays **Windows-only**.
+Headless Linux options:
+- `gpg` store *(if added; see A7b)* — encrypted with the user's GPG key; `gpg-agent` asks for the passphrase once and caches it per `default-cache-ttl` / `max-cache-ttl`. Log in once per session, over SSH
+- `plaintext` store — file readable only by the user; unattended cron
+- `systemd-creds` (outside GCM) — encrypted at rest with a machine-bound key; a systemd timer passes it to the job via `$CREDENTIALS_DIRECTORY`, read with `--password-file`
 
-### Checklist — phased
+Anything readable by an unattended job is also readable by other processes running as that user; the headless options trade convenience against that.
 
-**Phase A — Core extraction (no user-visible change on Windows WPF)**
-- [ ] Add `Allog.Core` project; move `Services/*` and non-UI models; ensure zero references to `System.Windows`, WinForms, or Console-specific types in Core
-- [ ] Define small **host-facing façade** (e.g. use-case methods or `IAllogApp` / orchestrator) that WPF, CLI, and TUI call so behavior stays single-sourced
-- [ ] Wire WPF project to reference Core; trim duplicated logic from code-behind incrementally
-- [ ] Windows-only implementations (`ICredentialStore`, etc.) remain in WPF assembly or a `net10.0-windows` companion project referenced only by WPF
+**Order:** Core (A) → CLI (B) → Avalonia GUI (C) → packaging (D). New features can land in Core as soon as A2 is done; WPF picks them up until Avalonia replaces it. A TUI (Spectre.Console) stays optional (E).
 
-**Phase B — Headless CLI**
-- [ ] Add `Allog.Console`; root parser with `--help` and subcommands mirroring **initial** Core capabilities (authenticate, scrape characters, output paths, delay); extend verbs as new Core features ship
-- [ ] Credentials: **env vars** + **flags**; optional persisted settings including **obfuscated** password per **`SECURITY.md`** (documented; restrictive permissions on Unix where applicable)
-- [ ] Document environment variables, config file location, and exit codes for scripting
-- [ ] CI job: build and test Core + Console on Linux (and optionally macOS) so regressions surface early
+### Checklist — phased *(one task = one commit; each one ends with a passing build and tests)*
 
-**Phase C — TUI**
-- [ ] Implement `… tui` (or default interactive mode): main menu mapping to WPF concepts — account, output location, options/delay, run download, open output folder (`Process.Start` / `xdg-open` / `open` by OS)
-- [ ] Shared progress reporting via `IProgress<string>` or structured status DTOs so CLI (optional `--verbose`) and TUI stay aligned
-- [ ] Keyboard-first navigation; respect terminal size; clear error panels
+**Phase A — Core extraction (no user-visible change in WPF)**
+- [ ] A1. Add `IPlatformShell` + `WindowsPlatformShell` in the current project. Route `MoonseaCodexHandoff`, `DownloadsFolder`, `MainWindow.xaml.cs:279-308`, and `AboutDialog.xaml.cs:66` through it. Update `MoonseaCodexHandoffTests`. Verify on Windows: Open Files in Explorer, Import to Moonsea Codex, About link
+- [x] A2. Add `Allog.Core` (`net10.0`, no RuntimeIdentifier). Move `Services/*`. Keep the namespace `Adventure_League_Log_Downloader.Services` for a pure-move diff. WPF references Core; `InternalsVisibleTo` moves to Core. Windows build + tests pass. *Done 2026-10-13: all of `Services/` moved, including the Windows-specific files, because their tests move to Core-only in A3 and they compile on `net10.0`; `WindowsCredentialStore` is `[SupportedOSPlatform("windows")]`, and A1 still routes `DownloadsFolder` / `MoonseaCodexHandoff` through `IPlatformShell`. `CharacterDetailWindow.xaml` maps `services:` with `assembly=Allog.Core`. Verified on blueglow: build, 64/64 tests under Wine, self-contained single-file publish starts under Wine. Still to check on Windows: build, tests, and the character detail window (the one XAML change)*
+- [x] A3. Retarget the test project to `net10.0` with no RuntimeIdentifier, referencing Core only. Verify `dotnet test --project "Adventure League Log Downloader.Tests"` passes natively on Linux (blueglow). *Done 2026-10-13: natively on blueglow 57 pass + 7 `WindowsCredentialStoreTests` skipped (xunit v3 `SkipUnless`); the same tests built for `win-x64` pass 64/64 under Wine. `dotnet test` no longer builds the WPF app — `CLAUDE.md` / `README.md` now say to `dotnet build` the solution first*
+- [x] A4. CI: add an `ubuntu-latest` job that builds Core + tests and runs `dotnet test`. Also run tests in the Windows job (as of 2026-10-13 it builds/publishes but doesn't run tests). *Done 2026-10-13: `test-linux` job + a Test step in the Windows `build` job (`.github/workflows/dotnet-desktop.yml`). Manual run on `core-extraction` (run 38354523615): Linux 57 passed / 7 skipped; Windows 64 passed / 0 skipped*
+- [ ] A5. Core façade, one use case per commit, each moved out of `MainWindow.xaml.cs` code-behind and covered by tests with mocked HTTP:
+  - [ ] A5a. Authenticate + character list → `characters.json`
+  - [ ] A5b. Per-character CSV download (only-if-missing option, delay, cancel)
+  - [ ] A5c. Session log workbook export
+  - [ ] A5d. DM sessions → `dm_sessions.json` (from `DmSessionWindow.xaml.cs`)
+  - [ ] A5e. Additional site data (from `AdditionalDataWindow.xaml.cs`)
+  - [ ] A5f. MSC handoff (already in Core after A2; confirm it goes through `IPlatformShell`)
+- [ ] A6. `UnixPlatformShell` (Linux + macOS) in Core, with tests for path resolution and the command lines it builds
+- [x] A7a. Spike `Devlooped.CredentialManager` (2026-10-13, blueglow, scratch projects in `/tmp`, nothing committed). Results:
+  - **Blocker: requires Git.** `CredentialManager.Create` throws `Failed to locate 'git' executable on the path` on Windows (under Wine) and Linux when Git isn't installed; GCM reads its settings through `git config`, and the only override is `GIT_EXEC_PATH`. Most Windows users won't have Git
+  - License: source is MIT; the NuGet binary is under the Open Source Maintenance Fee EULA (fee applies only to revenue-generating users; self-compiling from source is exempt). Bundled analyzer DLL contains only compiler-attribute polyfills
+  - Linux has **no default store**: with nothing configured it throws `No credential store has been selected`. The app must choose one (`GCM_CREDENTIAL_STORE`)
+  - `secretservice` with no display: fails fast (`requires graphical interface`). Not tested with a display and no running keyring, because D-Bus would start `gnome-keyring-daemon` against the real login keyring; desktop-session test (2) not run either (no desktop login on blueglow)
+  - `plaintext`: works; site password + Warhorn token coexist; read/remove work. **File written mode 664** (group/other readable), password on line 1 — the app must set `0600` / `0700` itself
+  - `cache`: works (uses `git credential-cache` daemon, so also needs Git)
+  - `gpg`: requires `GPG_TTY` set even to encrypt (`GPG_TTY=/dev/null` is accepted). With the passphrase cached in `gpg-agent`, a no-tty (cron-style) read works. With nothing cached it fails in ~2 s with gpg's `Screen or window too small` — no hang. Files mode 664
+  - Windows migration (under Wine, plus GCM source): GCM enumerates all credentials and matches `namespace:service` exactly, so `Create("AllogDownloader").Get("AdventurersLeague", user)` matches the existing entry. Blob encoding is UTF-16 in GCM; not confirmed for `CredentialManagement` because the Wine run stopped at the Git check (later confirmed UTF-16 in A7b-1)
+- [ ] A7b. Own thin credential stores *(option 1 from A7a, decided 2026-10-13)*. Each store keeps the `ICredentialStore` interface, takes its entry name in the constructor (so the Warhorn token in section 11 can be a second entry), and throws on real failures (callers already catch); deleting a missing entry is not an error
+  - [x] A7b-1. Windows: `CredRead` / `CredWrite` / `CredDelete` P/Invoke in `WindowsCredentialStore`; same target name (`AllogDownloader:AdventurersLeague`) and blob format as `CredentialManagement`, so saved logins carry over; remove the `CredentialManagement` package. Round-trip tests (pass on Windows and under Wine); one-off check under Wine that an entry written by the old package reads back. *Done 2026-10-13: 64/64 tests under Wine; old package → new store and new store → old package both read back the same UTF-16 password. Real Windows (spectrum, 2026-10-13, Release build with Core): the existing saved login loads through the new store; in the GUI, remember + restart loads it, Forget + restart loads nothing, and the character detail window shows the session grid*
+  - [x] A7b-2. Headless file store: one file per entry under the settings folder, `0600` file / `0700` folder on Unix; user-facing text calls it "saved in a file", never "encrypted". Needs A2/A3 so its tests run natively on Linux. *Done 2026-10-13: `FileCredentialStore` + `PasswordObfuscation` in `Allog.Core/Services`. File is `credentials/<entry>.json` beside `settings.json` with `username` + `obfuscatedPassword` (`v1:` + Base64 of the UTF-8 password XORed with a fixed key, per `SECURITY.md`; obfuscation, not encryption). Own `credentials/` subfolder rather than inside `settings.json`, because the settings folder is created with default permissions and only a subfolder can be `0700` without changing it — record in A7c. Written to a temp file created `0600`, then renamed, so the password is never on disk with looser permissions; an existing loose folder is tightened. Unreadable file → `Load` returns null. Not wired into any host yet (A7b-5). Tests: 23 new; Linux 80 passed / 7 skipped (Windows store); win-x64 under Wine 85 passed / 2 skipped (Unix modes). Removing either permission safeguard fails a test*
+  - [ ] A7b-3. Linux: libsecret `secret_password_store_sync` / `lookup_sync` / `clear_sync` P/Invoke; falls back to A7b-2 when Secret Service isn't available (no display, no `libsecret-1.so.0`, or the call fails). Needs A2/A3. Verify on a Linux desktop session
+  - [ ] A7b-4. *(Deferred — no Mac to test on)* macOS Keychain via `SecKeychain*GenericPassword` P/Invoke. Until then macOS uses A7b-2
+  - [ ] A7b-5. Store selection by OS in one place (factory in Core); gpg store only if someone asks
+- [ ] A7c. Update `SECURITY.md` for the posture above (OS stores in the first wave; headless options; honest wording per store) and the user-visible strings that describe storage
 
-**Phase D — Polish (console)**
-- [ ] Single downloadable per OS for console + version string parity with WPF
-- [ ] README section: when to use WPF vs TUI vs headless CLI; security notes for env and config file
+**Phase B — CLI**
+- [ ] B1. Add `Allog.Cli` with System.CommandLine; `characters` verb (A5a); credentials from `--password` / `--password-file` / env var; exit codes. Runs on Linux
+- [ ] B2. `csv` verb (A5b)
+- [ ] B3. `workbook` and `dm-sessions` verbs (A5c, A5d)
+- [ ] B4. `allog login` / `allog logout` over the configured store (A7b), then the lookup order above. README section: env vars, `--password-file`, store choice for headless Linux (`gpg` / `plaintext` / `systemd-creds` timer example), config location, exit codes
 
-**Phase E — Full GUI rework** *(last)*  
-- [ ] Replace or supplement WPF with a cross-platform desktop UI **after** Core and console hosts are stable; new features should already live in Core where possible
-- **Note: Phase A is a hard prerequisite for Phase E, not a parallel workstream.** `MainWindow.xaml.cs` is ~900 lines with download orchestration, auth, scraping, CSV, and JSON all wired directly in code-behind with no DI. Porting that file to Avalonia before extraction roughly doubles the UI rewrite effort. Do Phase A first.
+**Phase C — Avalonia GUI**
+- [ ] C1. Add `Allog.Desktop` (Avalonia, `net10.0`): an empty main window launches on Linux and Windows. Add it to the Linux CI build
+- [ ] C2. Main window: character grid, Download, progress/cancel, status bar (A5a, A5b)
+- [ ] C3. Account dialog over `ICredentialStore` (A7b)
+- [ ] C4. Options + Data location dialogs (folder picker via Avalonia `StorageProvider`)
+- [ ] C5. Character detail window + Import to Moonsea Codex
+- [ ] C6. DM Sessions window
+- [ ] C7. Additional data window
+- [ ] C8. About dialog; File menu exports
+- [ ] C9. Parity check against WPF on Windows and Linux; record gaps here
+- [ ] C10. Retire WPF; Avalonia becomes the Windows app too *(decided 2026-10-13, conditional on C9: keep WPF for Windows only if C9 finds a blocker, e.g. DataGrid behavior or screen-reader support)*
 
-**Phase E notes — Avalonia port estimate (2025-05-05)**
+**Phase D — Packaging (cross-platform)**
+- [ ] D1. Self-contained single-file publish per RID: `win-x64`, `linux-x64`, `osx-arm64`, `osx-x64`; attach to GitHub releases
+- [ ] D2. Linux: decide tarball vs AppImage; `.desktop` file + icon
+- [ ] D3. macOS: `.app` bundle. Unsigned apps are blocked by Gatekeeper (user must right-click → Open, or run `xattr -d com.apple.quarantine`); signing + notarization needs a paid Apple Developer account. Document the workaround until then
+- [ ] D4. Version string parity across CLI and GUI; README section on which download to pick
+
+**Phase E — TUI** *(optional)*
+- [ ] Spectre.Console interactive mode in `Allog.Cli` over the same façade, if CLI users ask for it
+
+**Phase C notes — Avalonia port estimate (2025-05-05, revisit after Phase A)**
 
 Preferred framework: **Avalonia UI** over MAUI — desktop-first, better macOS stability, no mobile overhead. CORS is not an issue since it runs native.
 
-Estimated effort with AI-assisted development: **one long evening or two normal ones** (~3–5 hours total).
-
-Breakdown:
-- **Service layer migration (~1 hr):** Nearly all of `Services/*` compiles unchanged once in Core. Only `WindowsCredentialStore` needs a cross-platform replacement (e.g. a small NuGet keychain abstraction or obfuscated file fallback per `SECURITY.md`).
-- **UI rewrite (~2–4 hrs):** 9 windows/dialogs; none are complex. Avalonia data binding is close enough to WPF that code-behind logic copies with minor changes. XAML is rewritten from scratch, but layout fidelity is not a goal.
-- **Wildcards:** First-time Avalonia project setup friction; DataGrid quirks vs WPF; any hidden WPF-specific APIs in code-behind (`Dispatcher`, `DependencyProperty`, etc.).
+- **UI rewrite:** 9 windows/dialogs; none are complex. Avalonia data binding is close to WPF's. XAML is rewritten from scratch; layout fidelity is not a goal.
+- **Wildcards:** first-time Avalonia project setup; DataGrid differences from WPF; WPF-specific APIs in code-behind (`Dispatcher`, `DependencyProperty`, etc.).
+- Doing Phase A first matters: `MainWindow.xaml.cs` (~900 lines) wires auth, scraping, CSV, and JSON directly in code-behind. Porting it before extraction means porting that logic twice.
 
 Migration impact on existing users (all Windows as of 2025-05-05):
-- Settings (`%AppData%\AllogDownloader\settings.json`) — survive as-is; `SpecialFolder.ApplicationData` resolves identically.
+- Settings (`%AppData%\AllogDownloader\settings.json`) — survive as-is; `SpecialFolder.ApplicationData` resolves identically. On Linux this is `~/.config/AllogDownloader/`
 - Downloaded CSVs/JSON — unaffected (user-chosen paths).
-- Saved credentials — one-time re-login; Windows Credential Manager is Windows-only and not carried forward.
+- Saved credentials — stay in Windows Credential Manager under the same target name (A7b option 1 reads it directly).
 
 ---
 
