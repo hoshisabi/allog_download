@@ -173,7 +173,7 @@ Anything readable by an unattended job is also readable by other processes runni
   - [ ] A7b-3. Linux: libsecret `secret_password_store_sync` / `lookup_sync` / `clear_sync` P/Invoke; falls back to A7b-2 when Secret Service isn't available (no display, no `libsecret-1.so.0`, or the call fails). Needs A2/A3. Verify on a Linux desktop session
   - [ ] A7b-4. *(Deferred — no Mac to test on)* macOS Keychain via `SecKeychain*GenericPassword` P/Invoke. Until then macOS uses A7b-2
   - [ ] A7b-5. Store selection by OS in one place (factory in Core); gpg store only if someone asks
-- [ ] A7c. Update `SECURITY.md` for the posture above (OS stores in the first wave; headless options; honest wording per store) and the user-visible strings that describe storage
+- [x] A7c. Update `SECURITY.md` for the posture above (OS stores in the first wave; headless options; honest wording per store) and the user-visible strings that describe storage. *Done 2026-10-13: `SECURITY.md` rewritten — posture, stores by platform, file store details, obfuscation format, unattended-use note, wording table. WPF strings unchanged (they name Windows Credential Manager, which WPF uses); hosts that can fall back to the file store pick wording from the store in use*
 
 **Phase B — CLI**
 - [ ] B1. Add `Allog.Cli` with System.CommandLine; `characters` verb (A5a); credentials from `--password` / `--password-file` / env var; exit codes. Runs on Linux
