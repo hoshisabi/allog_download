@@ -4,7 +4,7 @@
 
 `allog_download` is a tool for downloading and processing data from AdventurersLeagueLog.com (Adventurers League character/session logs).
 
-**Active development target:** The C# WPF App (`Adventure League Log Downloader/`) — a native Windows GUI app built on .NET 10.
+**Active development target:** The C# WPF App (`Adventure League Log Downloader/`) — a native Windows GUI app built on .NET 10. Site logic (auth, scrapers, CSV/JSON/MSC export, settings, credential store) lives in `Allog.Core/` (`net10.0`), which the WPF app references; see TASKS.md 7b for the cross-platform plan.
 
 **Archived:** `archive/python/` contains the original Python scripts that preceded the C# app. They are not maintained and should not be treated as current code.
 
@@ -15,7 +15,7 @@
 ### Tech Stack
 - .NET 10.0-windows, WPF
 - NuGet: `HtmlAgilityPack` (HTML parsing), `CsvHelper`
-- Windows Credential Manager via advapi32 P/Invoke (`Services/WindowsCredentialStore.cs`)
+- Windows Credential Manager via advapi32 P/Invoke (`Allog.Core/Services/WindowsCredentialStore.cs`)
 - IDE: Visual Studio 2022 or JetBrains Rider
 
 ### Build & Publish
@@ -40,7 +40,7 @@ dotnet test --project "Adventure League Log Downloader.Tests"
 - Characters JSON export
 - Per-character CSV download (`character_{id}.csv`) and **File → Export session log workbook (CSV)…** (`session_log_workbook.csv`) — see `docs/examples/spreadsheet-ken-ddal-log.md`
 - DM session list scraping (**DM Sessions…** window → `dm_sessions.json`)
-- Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window writes an MSC-ready `moonseacodeximport.csv` to Downloads (browser-style ` (N)` suffix if taken), selects it in Explorer, and opens `https://moonseacodex.com/characters` (`Services/MoonseaCodexHandoff.cs`, `MoonseaCodexCsvWriter.cs`)
+- Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window writes an MSC-ready `moonseacodeximport.csv` to Downloads (browser-style ` (N)` suffix if taken), selects it in Explorer, and opens `https://moonseacodex.com/characters` (`Allog.Core/Services/MoonseaCodexHandoff.cs`, `MoonseaCodexCsvWriter.cs`)
 
 ### Moonsea Codex (MSC) notes
 - MSC source: [API](https://github.com/MoonseaCodex/API) (Django backend), [WebUI](https://github.com/MoonseaCodex/WebUI) (Next.js frontend)

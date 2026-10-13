@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure League Log Downlo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure League Log Downloader.Tests", "Adventure League Log Downloader.Tests\Adventure League Log Downloader.Tests.csproj", "{2B397F96-0939-45EE-B669-2126F8EC6940}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Allog.Core", "Allog.Core\Allog.Core.csproj", "{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,18 @@ Global
 		{2B397F96-0939-45EE-B669-2126F8EC6940}.Release|x64.Build.0 = Release|Any CPU
 		{2B397F96-0939-45EE-B669-2126F8EC6940}.Release|x86.ActiveCfg = Release|Any CPU
 		{2B397F96-0939-45EE-B669-2126F8EC6940}.Release|x86.Build.0 = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|x64.Build.0 = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Debug|x86.Build.0 = Debug|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|x64.ActiveCfg = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|x64.Build.0 = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|x86.ActiveCfg = Release|Any CPU
+		{C3F01FC9-6D3D-4C31-8B7E-8DCC3EAB0E99}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

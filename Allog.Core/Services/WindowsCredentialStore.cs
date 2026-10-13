@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Adventure_League_Log_Downloader.Services;
@@ -9,6 +10,7 @@ namespace Adventure_League_Log_Downloader.Services;
 /// One generic credential in Windows Credential Manager, read and written through advapi32. The target name and the
 /// UTF-16 password blob match what the <c>CredentialManagement</c> package wrote, so logins saved by earlier versions load.
 /// </summary>
+[SupportedOSPlatform("windows")]
 public sealed class WindowsCredentialStore : ICredentialStore
 {
     public const string DefaultTarget = "AllogDownloader:AdventurersLeague";
