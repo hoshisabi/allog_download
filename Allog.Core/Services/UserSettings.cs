@@ -42,7 +42,7 @@ public sealed class UserSettings
     /// Default folder for exported JSON, aligned with <see cref="SettingsService"/> (%AppData%\AllogDownloader).
     /// </summary>
     public static string DefaultDataFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AllogDownloader");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "AllogDownloader");
 
     public static UserSettings CreateDefaults()
     {
