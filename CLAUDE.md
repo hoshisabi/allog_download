@@ -25,7 +25,10 @@
 dotnet publish "Adventure League Log Downloader" -p:PublishProfile=FolderProfile
 # Output: Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win-x64\
 
-# Build + run tests; also produces the Debug exe used for manual testing:
+# Build everything (including the Debug exe used for manual testing), then run tests.
+# The test project references Allog.Core only, so `dotnet test` alone doesn't rebuild the WPF app.
+# Tests run natively on Windows, macOS, and Linux; WindowsCredentialStoreTests are skipped off Windows.
+dotnet build "Adventure League Log Downloader.sln"
 dotnet test --project "Adventure League Log Downloader.Tests"
 # Debug exe: Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe
 # (older bin\Release and net9.0 folders may be stale — check timestamps)

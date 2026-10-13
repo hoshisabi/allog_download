@@ -1,18 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Adventure_League_Log_Downloader.Tests</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Adventure League Log Downloader\Adventure League Log Downloader.csproj" />
+    <ProjectReference Include="..\Allog.Core\Allog.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

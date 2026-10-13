@@ -1,24 +1,35 @@
 using System;
+using System.Runtime.Versioning;
 using Adventure_League_Log_Downloader.Services;
 
 namespace Adventure_League_Log_Downloader.Tests;
 
 /// <summary>
 /// Uses the real Credential Manager with a unique target per test instance. Dispose removes it.
+/// Skipped on other OSes.
 /// </summary>
+[SupportedOSPlatform("windows")]
 public class WindowsCredentialStoreTests : IDisposable
 {
+    private const string WindowsOnly = "Windows Credential Manager is only available on Windows.";
+
+    public static bool IsWindows => OperatingSystem.IsWindows();
+
     private readonly WindowsCredentialStore _store = new($"AllogDownloaderTest:{Guid.NewGuid():N}");
 
-    public void Dispose() => _store.Delete();
+    public void Dispose()
+    {
+        if (IsWindows)
+            _store.Delete();
+    }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Load_NothingSaved_ReturnsNull()
     {
         Assert.Null(_store.Load());
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Save_ThenLoad_RoundTripsUsernameAndPassword()
     {
         _store.Save("someone@example.com", "pässwörd ☃ with spaces");
@@ -28,7 +39,7 @@ public class WindowsCredentialStoreTests : IDisposable
         Assert.Equal(("someone@example.com", "pässwörd ☃ with spaces"), loaded);
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Save_Twice_KeepsLatest()
     {
         _store.Save("first", "one");
@@ -37,7 +48,7 @@ public class WindowsCredentialStoreTests : IDisposable
         Assert.Equal(("second", "two"), _store.Load());
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Save_EmptyPassword_LoadsEmptyPassword()
     {
         _store.Save("someone", string.Empty);
@@ -45,7 +56,7 @@ public class WindowsCredentialStoreTests : IDisposable
         Assert.Equal(("someone", string.Empty), _store.Load());
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Delete_RemovesSavedCredential()
     {
         _store.Save("someone", "secret");
@@ -55,13 +66,13 @@ public class WindowsCredentialStoreTests : IDisposable
         Assert.Null(_store.Load());
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Delete_NothingSaved_DoesNotThrow()
     {
         _store.Delete();
     }
 
-    [Fact]
+    [Fact(Skip = WindowsOnly, SkipUnless = nameof(IsWindows))]
     public void Entries_WithDifferentTargets_AreIndependent()
     {
         var other = new WindowsCredentialStore($"AllogDownloaderTest:{Guid.NewGuid():N}");

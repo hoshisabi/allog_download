@@ -56,7 +56,7 @@ Output: `Adventure League Log Downloader\bin\Release\net10.0-windows\publish\win
 
 Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Rider. Target framework: `.NET 10.0-windows`.
 
-From the command line, `dotnet test --project "Adventure League Log Downloader.Tests"` builds the app and runs the tests. The Debug build it produces is at `Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe`.
+From the command line, `dotnet build "Adventure League Log Downloader.sln"` builds the app; the Debug build is at `Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe`. `dotnet test --project "Adventure League Log Downloader.Tests"` runs the tests. The tests cover `Allog.Core` only, so they also run on macOS and Linux (the Windows Credential Manager tests are skipped there).
 
 ---
 
