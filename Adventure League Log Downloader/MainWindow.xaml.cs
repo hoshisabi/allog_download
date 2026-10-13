@@ -19,9 +19,9 @@ namespace Adventure_League_Log_Downloader;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly ISettingsService _settingsService = new SettingsService();
+    private readonly ISettingsService _settingsService;
     private UserSettings _settings = UserSettings.CreateDefaults();
-    private readonly ICredentialStore _credentialStore = new WindowsCredentialStore();
+    private readonly ICredentialStore _credentialStore;
     private readonly IPlatformShell _shell = PlatformShell.ForCurrentOS();
     private readonly ObservableCollection<CharacterRecord> _characterPreview = new();
 
@@ -36,6 +36,8 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _settingsService = new SettingsService();
+        _credentialStore = CredentialStores.ForCurrentOS(_settingsService);
         InitializeComponent();
         CharactersDataGrid.ItemsSource = _characterPreview;
         Loaded += OnLoaded;
