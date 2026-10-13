@@ -6,8 +6,7 @@ namespace Allog.Cli;
 /// <summary><c>allog characters</c>: the desktop app's Download button, without selecting characters.</summary>
 internal static class CharactersCommand
 {
-    internal sealed record Args(
-        FileInfo? Output, string? Csv, double? Delay, string? Username, string? Password, FileInfo? PasswordFile, bool Quiet);
+    internal sealed record Args(FileInfo? Output, string? Csv, double? Delay, LoginOptions.Values Login, bool Quiet);
 
     public static Command Build(Func<CliContext> context)
     {
@@ -24,29 +23,17 @@ internal static class CharactersCommand
         {
             Description = "Seconds to wait between site requests. Default: the desktop app's setting (0.25)."
         };
-        var username = new Option<string?>("--username", "-u")
-        {
-            Description = $"Site username. Default: {CliCredentials.UsernameVariable}, else the saved login."
-        };
-        var password = new Option<string?>("--password")
-        {
-            Description = "Site password. Other users on this machine can see it in the process list; prefer --password-file or "
-                          + CliCredentials.PasswordVariable + "."
-        };
-        var passwordFile = new Option<FileInfo?>("--password-file")
-        {
-            Description = "File whose first line is the site password (e.g. from systemd-creds)."
-        };
+        var login = new LoginOptions();
         var quiet = new Option<bool>("--quiet", "-q") { Description = "Only print the final summary and errors." };
 
         var command = new Command("characters", "Sign in, download your character list and character CSVs, and save the list as JSON.")
         {
-            output, csv, delay, username, password, passwordFile, quiet
+            output, csv, delay
         };
+        login.AddTo(command);
+        command.Options.Add(quiet);
         command.SetAction((parse, ct) => RunAsync(
-            new Args(
-                parse.GetValue(output), parse.GetValue(csv), parse.GetValue(delay), parse.GetValue(username),
-                parse.GetValue(password), parse.GetValue(passwordFile), parse.GetValue(quiet)),
+            new Args(parse.GetValue(output), parse.GetValue(csv), parse.GetValue(delay), login.Read(parse), parse.GetValue(quiet)),
             context(),
             ct));
         return command;
@@ -80,17 +67,16 @@ internal static class CharactersCommand
                 : CharacterCsvMode.All
         };
 
-        var login = CliCredentials.Resolve(
-            args.Username, args.Password, args.PasswordFile, context.Environment, context.CredentialStore, out var problem);
+        var login = args.Login.Resolve(context, useSavedLogin: true, out var problem);
         if (login is null)
         {
             await context.Error.WriteLineAsync(problem);
             return ExitCodes.Usage;
         }
 
-        var progress = args.Quiet ? null : new LineProgress(context.Error);
+        var progress = args.Quiet ? null : new StatusLines(context.Error, context.ErrorIsTerminal);
         if (!args.Quiet)
-            await context.Error.WriteLineAsync($"Signing in as {login.Username} (login from {login.Source})…");
+            await context.Error.WriteLineAsync($"Signing in as {login.Username}; login from {login.Source}…");
 
         try
         {
@@ -101,6 +87,7 @@ internal static class CharactersCommand
                 progress,
                 ct);
 
+            progress?.Finish();
             settings.LastWebsiteDownloadUtc = DateTimeOffset.UtcNow;
             await context.Settings.SaveAsync(settings);
 
@@ -110,11 +97,13 @@ internal static class CharactersCommand
         }
         catch (OperationCanceledException)
         {
+            progress?.Finish();
             await context.Error.WriteLineAsync("Cancelled.");
             return ExitCodes.Cancelled;
         }
         catch (Exception ex)
         {
+            progress?.Finish();
             await context.Error.WriteLineAsync($"Error: {ex.Message}");
             return ExitCodes.Error;
         }
@@ -126,19 +115,5 @@ internal static class CharactersCommand
         var folder = settings.OutputFolder?.Trim();
         var fileName = settings.OutputFileName?.Trim();
         return string.IsNullOrEmpty(folder) || string.IsNullOrEmpty(fileName) ? null : Path.Combine(folder, fileName);
-    }
-
-    /// <summary>Writes each progress message once, as it happens.</summary>
-    private sealed class LineProgress(TextWriter writer) : IProgress<CharacterScrapeReport>
-    {
-        private string? _last;
-
-        public void Report(CharacterScrapeReport value)
-        {
-            if (string.IsNullOrWhiteSpace(value.Detail) || value.Detail == _last)
-                return;
-            _last = value.Detail;
-            writer.WriteLine("  " + value.Detail);
-        }
     }
 }

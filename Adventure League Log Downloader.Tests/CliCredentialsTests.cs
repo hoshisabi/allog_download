@@ -81,7 +81,7 @@ public class CliCredentialsTests : IDisposable
         var found = Resolve();
 
         Assert.Equal(("saved-user", "saved-pass"), (found!.Username, found.Password));
-        Assert.Equal("saved login (test store)", found.Source);
+        Assert.Equal("the saved login in test store", found.Source);
     }
 
     [Fact]

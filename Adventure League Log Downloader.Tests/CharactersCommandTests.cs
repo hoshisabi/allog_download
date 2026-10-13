@@ -19,6 +19,7 @@ public class CharactersCommandTests : IDisposable
     private readonly StringWriter _out = new();
     private readonly StringWriter _error = new();
     private readonly List<(string Username, string Password)> _signIns = [];
+    private readonly Dictionary<string, string> _environment = [];
     private Exception? _signInFailure;
 
     public CharactersCommandTests()
@@ -55,14 +56,16 @@ public class CharactersCommandTests : IDisposable
                         throw _signInFailure;
                     return _site.Auth();
                 },
-                _ => null,
+                name => _environment.GetValueOrDefault(name),
                 _out,
-                _error),
+                _error,
+                (_, _) => null,
+                ErrorIsTerminal: false),
             ct);
 
     private static CharactersCommand.Args Args(
-        FileInfo? output = null, string? csv = null, double? delay = null, string? username = null, bool quiet = false) =>
-        new(output, csv, delay, username, Password: null, PasswordFile: null, quiet);
+        FileInfo? output = null, string? csv = null, double? delay = null, FileInfo? envFile = null, bool quiet = false) =>
+        new(output, csv, delay, new LoginOptions.Values(null, null, null, envFile), quiet);
 
     [Fact]
     public async Task Defaults_UseSettingsAndSavedLogin()
@@ -178,11 +181,35 @@ public class CharactersCommandTests : IDisposable
     public async Task Progress_GoesToErrorStream_UnlessQuiet()
     {
         await RunAsync(Args(), TestContext.Current.CancellationToken);
-        Assert.Contains("Signing in as saved-user (login from saved login (test store))", _error.ToString());
+        Assert.Contains("Signing in as saved-user; login from the saved login in test store…", _error.ToString());
         Assert.Contains("Saving character list", _error.ToString());
 
         _error.GetStringBuilder().Clear();
         await RunAsync(Args(quiet: true), TestContext.Current.CancellationToken);
         Assert.Equal(string.Empty, _error.ToString());
+    }
+
+    [Fact]
+    public async Task EnvFile_LoginWinsOverEnvironmentAndSavedLogin()
+    {
+        var envFile = new FileInfo(Path.Combine(_dataDir, ".env"));
+        File.WriteAllText(envFile.FullName, "ALLOG_USERNAME=file-user\nALLOG_PASSWORD=\"file pass\"\n");
+        _environment["ALLOG_USERNAME"] = "env-user";
+        _environment["ALLOG_PASSWORD"] = "env-pass";
+
+        var exit = await RunAsync(Args(envFile: envFile), TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, exit);
+        Assert.Equal([("file-user", "file pass")], _signIns);
+    }
+
+    [Fact]
+    public async Task EnvFile_Missing_ExitsTwo()
+    {
+        var exit = await RunAsync(Args(envFile: new FileInfo(Path.Combine(_dataDir, "missing.env"))), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, exit);
+        Assert.StartsWith("Env file not found:", _error.ToString());
+        Assert.Empty(_signIns);
     }
 }
