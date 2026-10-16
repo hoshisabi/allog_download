@@ -42,7 +42,7 @@ dotnet test --project "Adventure League Log Downloader.Tests"
 - Options dialog (configurable network delay)
 - Characters JSON export
 - Per-character CSV download (`character_{id}.csv`) and **File → Export session log workbook (CSV)…** (`session_log_workbook.csv`) — see `docs/examples/spreadsheet-ken-ddal-log.md`
-- DM session list scraping (**DM Sessions…** window → `dm_sessions.json`)
+- DM session list scraping (**DM Sessions…** window → `dm_sessions.json`; **Export CSV** there writes `dm_sessions.csv` via `DmSessionCsvExporter`)
 - Moonsea Codex handoff: **Import to Moonsea Codex…** in the character detail window writes an MSC-ready `moonseacodeximport.csv` to Downloads (browser-style ` (N)` suffix if taken), selects it in Explorer, and opens `https://moonseacodex.com/characters` (`Allog.Core/Services/MoonseaCodexHandoff.cs`, `MoonseaCodexCsvWriter.cs`)
 
 ### Moonsea Codex (MSC) notes
@@ -61,7 +61,6 @@ dotnet test --project "Adventure League Log Downloader.Tests"
 - **Doc:** `docs/examples/spreadsheet-ken-ddal-log.md` — column layout, site CSV mapping, workbook export mapping, changelog, and future suggestions
 
 ### What's Pending (see TASKS.md for full checklist)
-- DM session CSV export
 - Per-character session log downloads
 - PDF export
 - MVVM refactor and DI
@@ -78,7 +77,7 @@ dotnet test --project "Adventure League Log Downloader.Tests"
 
 ## Project Status Summary
 - C# WPF app is the primary deliverable for non-programmer users
-- DM session CSV export is pending in C# (scraping and JSON are done)
+- DM session scraping, JSON, and CSV export are done in C#
 - See TASKS.md for the full checklist
 
 ## Security / credentials
