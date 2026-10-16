@@ -96,7 +96,7 @@ The site's HTML structure is the only interface this tool has. When it changes, 
   - Use **Scriban** for templating (`Scriban` NuGet package)
 - [ ] Characters Markdown export — per-character files, optional zip
 - [ ] Characters CSV export with zip (`json_to_csv_zip.py` → C#)
-- [ ] DM sessions JSON/CSV export — *partial: JSON (`dm_sessions.json`) written by the DM Sessions window; CSV pending*
+- [x] DM sessions JSON/CSV export — JSON (`dm_sessions.json`) written by the DM Sessions window; **Export CSV** there writes `dm_sessions.csv` (`DmSessionCsvExporter`)
 - [ ] Per-character session JSON/CSV export
 - [ ] Option: append timestamp to filenames
 
