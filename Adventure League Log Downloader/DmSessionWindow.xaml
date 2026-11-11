@@ -93,13 +93,23 @@
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
-                    <Button x:Name="ClearSessionSelectionButton"
+                    <Button x:Name="ExportCsvButton"
                             Margin="0,0,8,0"
                             TabIndex="3"
+                            Click="OnExportCsvClick"
+                            Content="Export _CSV">
+                        <Button.ToolTip>
+                            <TextBlock TextWrapping="Wrap" MaxWidth="320"
+                                       Text="Write the sessions shown above to dm_sessions.csv in the output folder (one row per session)."/>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button x:Name="ClearSessionSelectionButton"
+                            Margin="0,0,8,0"
+                            TabIndex="4"
                             Click="OnClearSessionSelectionClick"
                             Content="Clear _selection"/>
                     <Button x:Name="DownloadButton"
-                            TabIndex="4"
+                            TabIndex="5"
                             IsDefault="True"
                             Click="OnDownloadClick"
                             Content="_Download">

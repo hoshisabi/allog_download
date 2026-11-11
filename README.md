@@ -1,6 +1,6 @@
 # allog_download
 
-A Windows desktop app for downloading and processing character/session data from AdventurersLeagueLog.com.
+A Windows desktop app, and a command-line tool for Windows, macOS, and Linux, for downloading and processing character/session data from AdventurersLeagueLog.com.
 
 ## Adventure League Log Downloader (C# WPF App)
 
@@ -59,6 +59,74 @@ Open `Adventure League Log Downloader.sln` in Visual Studio 2022 or JetBrains Ri
 From the command line, `dotnet build "Adventure League Log Downloader.sln"` builds the app; the Debug build is at `Adventure League Log Downloader\bin\Debug\net10.0-windows\win-x64\Adventure League Log Downloader.exe`. `dotnet test --project "Adventure League Log Downloader.Tests"` runs the tests. The tests cover `Allog.Core` only, so they also run on macOS and Linux (the Windows Credential Manager tests are skipped there).
 
 ---
+
+## Command-line tool (`allog`) — Windows, macOS, Linux
+
+`allog` does what the desktop app's **Download** button does: signs in, downloads your character list and character CSVs, and saves `characters.json`. It reads the same settings file and saved login as the desktop app, so on Windows the two share one data folder.
+
+### Getting it
+
+There's no release download yet. Build it with the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), picking your platform (`linux-x64`, `osx-arm64`, `osx-x64`, or `win-x64`):
+
+```bash
+dotnet publish Allog.Cli -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o out/allog-linux-x64
+```
+
+The result is one file, `out/allog-linux-x64/allog` (`allog.exe` on Windows), that runs without .NET installed. Copy it somewhere on your `PATH`, such as `~/.local/bin`.
+
+### Signing in
+
+Save your login once:
+
+```bash
+allog login
+```
+
+It asks for your username and password (the password isn't shown as you type), checks them on AdventurersLeagueLog.com, and saves them only if the sign-in works. `allog logout` removes the saved login.
+
+| OS | Where the login is saved |
+|---|---|
+| Windows | Windows Credential Manager, shared with the desktop app |
+| macOS, Linux | `~/.config/AllogDownloader/credentials/AdventurersLeague.json`. The password is obfuscated, **not encrypted**, and the file is readable only by you (`0600`) |
+
+For scripts, or to skip saving a login, any command that signs in also accepts these:
+
+- `--password-file PATH`: a file whose first line is the password (for example from `systemd-creds`)
+- `--env-file PATH`: a `KEY=VALUE` file with `ALLOG_USERNAME` and `ALLOG_PASSWORD`
+- the `ALLOG_USERNAME` and `ALLOG_PASSWORD` environment variables
+- `--password PASSWORD`. Other users on the same machine can see a password given this way in the process list, so prefer the options above.
+
+`--username NAME` sets the username for any of them. If more than one password source is given, `--password` wins, then `--password-file`, then `--env-file`, then the environment variables. With none of them, commands use the saved login. See [`SECURITY.md`](SECURITY.md) for what each option protects against.
+
+### Downloading characters
+
+```bash
+allog characters                  # character list + CSVs, using the desktop app's settings
+allog characters --csv missing    # only CSVs you don't have yet
+allog characters --csv skip       # list only
+allog characters --output ~/AL/characters.json
+```
+
+| Option | Default |
+|---|---|
+| `--output PATH` | the desktop app's data location: `%AppData%\AllogDownloader\characters.json` on Windows, `~/.config/AllogDownloader/characters.json` on macOS and Linux. Character CSVs go in the same folder |
+| `--csv skip\|missing\|all` | the desktop app's setting (`missing` until you change it) |
+| `--delay SECONDS` | the desktop app's setting (0.25): the pause between requests to the site |
+| `--quiet` | off; with it, only the summary and errors are printed |
+
+Progress goes to stderr and the summary to stdout. In a terminal, each step updates one line in place.
+
+### Running it on a schedule
+
+Exit codes: `0` ok, `1` error (for example a failed sign-in), `2` no login or bad arguments, `3` finished but some character CSVs failed, `130` cancelled.
+
+A weekly cron job, using the saved login:
+
+```cron
+0 6 * * 1  $HOME/.local/bin/allog characters --csv missing --quiet
+```
+
+`allog --help` and `allog characters --help` list everything.
 
 ## Archived Python Scripts
 

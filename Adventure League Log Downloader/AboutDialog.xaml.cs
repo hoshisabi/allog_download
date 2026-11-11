@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Navigation;
+using Adventure_League_Log_Downloader.Services;
 
 namespace Adventure_League_Log_Downloader;
 
@@ -63,7 +64,7 @@ public partial class AboutDialog : Window
 
     private void OnLinkNavigate(object sender, RequestNavigateEventArgs e)
     {
-        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        PlatformShell.ForCurrentOS().OpenUrl(e.Uri.AbsoluteUri);
         e.Handled = true;
     }
 

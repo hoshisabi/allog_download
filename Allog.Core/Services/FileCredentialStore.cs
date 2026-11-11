@@ -12,7 +12,7 @@ namespace Adventure_League_Log_Downloader.Services;
 /// </summary>
 public sealed class FileCredentialStore : ICredentialStore
 {
-    public const string DefaultEntryName = "AdventurersLeague";
+    public const string DefaultEntryName = CredentialStores.SiteLoginEntry;
 
     private const UnixFileMode PrivateFolderMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
     private const UnixFileMode PrivateFileMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
@@ -40,6 +40,8 @@ public sealed class FileCredentialStore : ICredentialStore
     public string FilePath { get; }
 
     public bool IsAvailable => true;
+
+    public string Description => $"a file on this computer (obfuscated, not encrypted): {FilePath}";
 
     public void Save(string username, string password)
     {

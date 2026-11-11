@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace Adventure_League_Log_Downloader.Services;
 
@@ -15,11 +14,13 @@ namespace Adventure_League_Log_Downloader.Services;
 /// </summary>
 public static class CharacterLogCsvReader
 {
-    private static readonly CsvConfiguration CsvConfig = new(CultureInfo.InvariantCulture)
+    private static readonly CsvReaderOptions CsvConfig = new()
     {
-        HasHeaderRecord = false,
-        BadDataFound = null,
-        MissingFieldFound = null,
+        Separator = ',',
+        HasHeader = false,
+        SkipEmptyLines = true,
+        MalformedData = CsvMalformedDataHandling.Recover,
+        MissingField = CsvMissingFieldHandling.ReturnEmpty,
     };
 
     /// <summary>
@@ -57,15 +58,15 @@ public static class CharacterLogCsvReader
 
             using var stream = File.OpenRead(csvPath);
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-            using var csv = new CsvReader(reader, CsvConfig);
+            using var csv = CsvReader.Create(reader, CsvConfig);
 
             DateTime? max = null;
             while (csv.Read())
             {
-                if (csv.ColumnCount < 4)
+                if (csv.FieldCount < 4)
                     continue;
 
-                var rowType = NormalizeCell(csv.GetField(0));
+                var rowType = NormalizeCell(csv.GetString(0));
                 if (rowType.Length == 0 || IsNoiseRowType(rowType))
                     continue;
 
@@ -73,7 +74,7 @@ public static class CharacterLogCsvReader
                 if (!rowType.EndsWith("LogEntry", StringComparison.Ordinal))
                     continue;
 
-                var title = NormalizeCell(csv.GetField(1));
+                var title = NormalizeCell(csv.GetString(1));
                 if (title.Length == 0)
                     continue;
 
@@ -84,10 +85,10 @@ public static class CharacterLogCsvReader
 
                 // Latest date on this row: max of date_played (3) and date_dmed (15) when present.
                 DateTime? rowMax = null;
-                if (csv.ColumnCount > 3)
-                    ConsiderDate(NormalizeCell(csv.GetField(3)), ref rowMax);
-                if (csv.ColumnCount > 15)
-                    ConsiderDate(NormalizeCell(csv.GetField(15)), ref rowMax);
+                if (csv.FieldCount > 3)
+                    ConsiderDate(NormalizeCell(csv.GetString(3)), ref rowMax);
+                if (csv.FieldCount > 15)
+                    ConsiderDate(NormalizeCell(csv.GetString(15)), ref rowMax);
 
                 if (!rowMax.HasValue)
                     continue;

@@ -105,6 +105,40 @@ public partial class DmSessionWindow : Window
     private void OnClearSessionSelectionClick(object sender, RoutedEventArgs e) =>
         SessionsDataGrid.UnselectAll();
 
+    private async void OnExportCsvClick(object sender, RoutedEventArgs e)
+    {
+        if (_sessionPreview.Count == 0)
+        {
+            System.Windows.MessageBox.Show(this,
+                "No DM sessions to export yet. Download first so the list above has rows.",
+                "Export CSV",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_outputFolder))
+        {
+            System.Windows.MessageBox.Show(this,
+                "Output folder is not set. Set it in the main window under Options → Data location.",
+                "Export CSV",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var result = await DmSessionCsvExporter.ExportAsync(_outputFolder, _sessionPreview.ToList());
+            StatusText.Text = $"Exported {result.RowCount} session(s) to {Path.GetFileName(result.OutputPath)}";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Error";
+            System.Windows.MessageBox.Show(this, ex.Message, "Export CSV", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private async void OnSkipDmSessionDetailsChanged(object sender, RoutedEventArgs e)
     {
         ApplyDmSessionDetailOptionEnabledState();

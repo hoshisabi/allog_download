@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace Adventure_League_Log_Downloader.Services;
 
@@ -18,11 +17,22 @@ namespace Adventure_League_Log_Downloader.Services;
 /// </summary>
 public static class SessionLogWorkbookCsvExporter
 {
-    private static readonly CsvConfiguration ReaderConfig = new(CultureInfo.InvariantCulture)
+    private static readonly CsvReaderOptions ReaderConfig = new()
     {
-        HasHeaderRecord = false,
-        BadDataFound = null,
-        MissingFieldFound = null,
+        Separator = ',',
+        HasHeader = false,
+        SkipEmptyLines = true,
+        MalformedData = CsvMalformedDataHandling.Recover,
+        MissingField = CsvMissingFieldHandling.ReturnEmpty,
+    };
+
+    // CsvHelper 33's defaults: the platform line ending, and quotes around a field that starts or ends with a space.
+    // (CsvHelper 34 quotes on a leading or trailing tab as well.)
+    private static readonly CsvWriterOptions WriterConfig = new()
+    {
+        Quoting = CsvQuoting.WhenNeededOrWhitespace,
+        NewLine = Environment.NewLine,
+        FormatProvider = CultureInfo.InvariantCulture,
     };
 
     private static readonly Regex AdventureLeadingCode = new(
@@ -86,7 +96,7 @@ public static class SessionLogWorkbookCsvExporter
     {
         using var stream = File.OpenRead(csvPath);
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-        using var csv = new CsvReader(reader, ReaderConfig);
+        using var csv = CsvReader.Create(reader, ReaderConfig);
 
         Dictionary<string, int>? logColumns = null;
         var nextRowIsBannerName = false;
@@ -95,11 +105,11 @@ public static class SessionLogWorkbookCsvExporter
 
         while (csv.Read())
         {
-            var count = csv.ColumnCount;
+            var count = csv.FieldCount;
             if (count < 1)
                 continue;
 
-            var mark0 = Normalize(csv.GetField(0));
+            var mark0 = Normalize(csv.GetString(0));
 
             if (logColumns == null)
             {
@@ -125,7 +135,7 @@ public static class SessionLogWorkbookCsvExporter
 
             if (mark0.Equals("MAGIC ITEM", StringComparison.OrdinalIgnoreCase))
             {
-                var nameCell = count > 1 ? Normalize(csv.GetField(1)) : string.Empty;
+                var nameCell = count > 1 ? Normalize(csv.GetString(1)) : string.Empty;
                 if (nameCell.Equals("name", StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -150,7 +160,7 @@ public static class SessionLogWorkbookCsvExporter
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         for (var i = 0; i < count; i++)
         {
-            var h = Normalize(csv.GetField(i));
+            var h = Normalize(csv.GetString(i));
             if (h.Length > 0 && !map.ContainsKey(h))
                 map[h] = i;
         }
@@ -165,7 +175,7 @@ public static class SessionLogWorkbookCsvExporter
         CharacterRecord ch,
         string entryType)
     {
-        string Cell(string key) => ix.TryGetValue(key, out var i) && i < count ? Normalize(csv.GetField(i)) : string.Empty;
+        string Cell(string key) => ix.TryGetValue(key, out var i) && i < count ? Normalize(csv.GetString(i)) : string.Empty;
 
         var rawTitle = Cell("adventure_title");
         SplitAdventureTitle(rawTitle, out var advCode, out var advName);
@@ -240,11 +250,11 @@ public static class SessionLogWorkbookCsvExporter
     {
         await using var fs = File.Create(path);
         await using var textWriter = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-        await using var writer = new CsvWriter(textWriter, CultureInfo.InvariantCulture);
+        await using var writer = CsvWriter.Create(textWriter, WriterConfig);
 
         foreach (var h in WorkbookRow.Headers)
             writer.WriteField(h);
-        await writer.NextRecordAsync().ConfigureAwait(false);
+        await writer.EndRecordAsync().ConfigureAwait(false);
 
         foreach (var r in rows)
         {
@@ -272,7 +282,7 @@ public static class SessionLogWorkbookCsvExporter
             writer.WriteField(r.SessionNum);
             writer.WriteField(r.CampaignId);
             writer.WriteField(r.DmDci);
-            await writer.NextRecordAsync().ConfigureAwait(false);
+            await writer.EndRecordAsync().ConfigureAwait(false);
         }
     }
 

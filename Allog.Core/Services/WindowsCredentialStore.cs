@@ -13,7 +13,7 @@ namespace Adventure_League_Log_Downloader.Services;
 [SupportedOSPlatform("windows")]
 public sealed class WindowsCredentialStore : ICredentialStore
 {
-    public const string DefaultTarget = "AllogDownloader:AdventurersLeague";
+    public const string DefaultTarget = "AllogDownloader:" + CredentialStores.SiteLoginEntry;
 
     private const int CredTypeGeneric = 1;
     private const int CredPersistLocalMachine = 2;
@@ -27,6 +27,8 @@ public sealed class WindowsCredentialStore : ICredentialStore
     }
 
     public bool IsAvailable => OperatingSystem.IsWindows();
+
+    public string Description => "Windows Credential Manager";
 
     public void Save(string username, string password)
     {

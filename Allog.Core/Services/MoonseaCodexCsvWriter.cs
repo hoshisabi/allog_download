@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace Adventure_League_Log_Downloader.Services;
 
@@ -27,11 +26,13 @@ public static class MoonseaCodexCsvWriter
 
     private const int PubliclyVisibleIndex = 7;
 
-    private static readonly CsvConfiguration ReaderConfig = new(CultureInfo.InvariantCulture)
+    private static readonly CsvReaderOptions ReaderConfig = new()
     {
-        HasHeaderRecord = false,
-        BadDataFound = null,
-        MissingFieldFound = null,
+        Separator = ',',
+        HasHeader = false,
+        SkipEmptyLines = true,
+        MalformedData = CsvMalformedDataHandling.Recover,
+        MissingField = CsvMissingFieldHandling.ReturnEmpty,
     };
 
     // Everything Python's str.splitlines() treats as a line boundary, since MSC splits the upload that way.
@@ -106,9 +107,9 @@ public static class MoonseaCodexCsvWriter
     {
         var records = new List<string[]>();
         using var reader = new StringReader(csvText.TrimStart('\uFEFF'));
-        using var csv = new CsvReader(reader, ReaderConfig);
+        using var csv = CsvReader.Create(reader, ReaderConfig);
         while (csv.Read())
-            records.Add(csv.Parser.Record ?? Array.Empty<string>());
+            records.Add(csv.Current.ToArray());
         return records;
     }
 }
