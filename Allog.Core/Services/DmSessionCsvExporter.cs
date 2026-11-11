@@ -21,6 +21,15 @@ public static class DmSessionCsvExporter
     /// <summary> Written next to <c>dm_sessions.json</c> as <c>dm_sessions.csv</c>. </summary>
     public const string DefaultOutputFileName = "dm_sessions.csv";
 
+    // CsvHelper 33's defaults: the platform line ending, and quotes around a field that starts or ends with a space.
+    // (CsvHelper 34 quotes on a leading or trailing tab as well.)
+    private static readonly CsvWriterOptions WriterConfig = new()
+    {
+        Quoting = CsvQuoting.WhenNeededOrWhitespace,
+        NewLine = Environment.NewLine,
+        FormatProvider = CultureInfo.InvariantCulture,
+    };
+
     public sealed class Result
     {
         public required string OutputPath { get; init; }
@@ -46,7 +55,7 @@ public static class DmSessionCsvExporter
 
         await using var fs = File.Create(outputPath);
         await using var textWriter = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-        await using var writer = new CsvWriter(textWriter, CultureInfo.InvariantCulture);
+        await using var writer = CsvWriter.Create(textWriter, WriterConfig);
 
         string[] header =
         [
@@ -57,7 +66,7 @@ public static class DmSessionCsvExporter
         ];
         foreach (var h in header)
             writer.WriteField(h);
-        await writer.NextRecordAsync();
+        await writer.EndRecordAsync();
 
         foreach (var s in sorted)
         {
@@ -82,7 +91,7 @@ public static class DmSessionCsvExporter
             writer.WriteField(s.DatePlayed);
             writer.WriteField(s.Notes);
             writer.WriteField(MagicItemsText(s));
-            await writer.NextRecordAsync();
+            await writer.EndRecordAsync();
         }
 
         await writer.FlushAsync();
