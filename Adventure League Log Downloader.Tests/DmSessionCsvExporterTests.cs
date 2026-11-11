@@ -5,7 +5,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Adventure_League_Log_Downloader.Services;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace Adventure_League_Log_Downloader.Tests;
 
@@ -94,10 +93,10 @@ public class DmSessionCsvExporterTests
     private static List<string[]> ReadRows(string path)
     {
         using var reader = new StreamReader(path);
-        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false });
+        using var csv = CsvReader.Create(reader, new CsvReaderOptions { Separator = ',', HasHeader = false });
         var rows = new List<string[]>();
         while (csv.Read())
-            rows.Add(csv.Parser.Record!);
+            rows.Add(csv.Current.ToArray());
         return rows;
     }
 
